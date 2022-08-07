@@ -70,6 +70,15 @@ pub fn mint(
         1,
     )?;
 
+    // token::freeze_account(CpiContext::new(
+    //     ctx.accounts.token_program.to_account_info(),
+    //     token::FreezeAccount {
+    //         mint: ctx.accounts.mint.to_account_info(),
+    //         account: ctx.accounts.token_account.to_account_info(),
+    //         authority: ctx.accounts.mint_authority.to_account_info(),
+    //     },
+    // ))?;
+
     msg!("Creating metadata account...");
     msg!(
         "Metadata account address: {}",

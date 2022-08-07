@@ -782,15 +782,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "memusicNft"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "mpl-token-metadata",
-]
-
-[[package]]
 name = "mpl-token-metadata"
 version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -820,6 +811,15 @@ dependencies = [
  "solana-program",
  "spl-token",
  "thiserror",
+]
+
+[[package]]
+name = "nft"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "mpl-token-metadata",
 ]
 
 [[package]]

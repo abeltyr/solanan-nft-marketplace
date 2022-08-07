@@ -1,7 +1,7 @@
 [features]
 seeds = false
 [programs.devnet]
-memusic_nft = "DN4P41d49eZosBp6Y4cFsPPmwJFqhm4D759mrSgJGADm"
+nft = "iC2Uv1eaFAaqk72RccoJx2NupqTGYpnXY7j7b8zyhwL"
 
 [registry]
 url = "https://anchor.projectserum.com"
