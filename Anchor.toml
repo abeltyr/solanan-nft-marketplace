@@ -1,7 +1,7 @@
 [features]
 seeds = false
 [programs.devnet]
-nft = "iC2Uv1eaFAaqk72RccoJx2NupqTGYpnXY7j7b8zyhwL"
+nft = "HBCzpKzWESn9gHKaGvPpe84Bt66CmF1S6mbLrCBCUb5T"
 
 [registry]
 url = "https://anchor.projectserum.com"
@@ -11,4 +11,5 @@ cluster = "devnet"
 wallet = "/home/av/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test-nft = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/nft.ts"
+test-sell = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/nft.ts"
