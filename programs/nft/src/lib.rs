@@ -1,27 +1,26 @@
 use anchor_lang::prelude::*;
 
-pub mod mint;
-pub mod sell;
+pub mod processor;
 
-use mint::*;
-use sell::*;
+pub mod error;
 
-declare_id!("HBCzpKzWESn9gHKaGvPpe84Bt66CmF1S6mbLrCBCUb5T");
+use crate::processor::{fixed_price_listing::*, nft_listing_pda::*};
+
+declare_id!("HzCCnp6EYNzjeFRBkMucKaqckN13VqZZjXiHSn9N6uws");
 
 #[program]
-pub mod nft {
+pub mod listings {
     use super::*;
 
-    pub fn mint(
-        ctx: Context<MintNft>,
-        metadata_title: String,
-        metadata_symbol: String,
-        metadata_uri: String,
-    ) -> Result<()> {
-        mint::mint(ctx, metadata_title, metadata_symbol, metadata_uri)
+    pub fn create_nft_listing(ctx: Context<CreateNftListing>) -> Result<()> {
+        create_nft_listing_pda(ctx)
     }
 
-    pub fn sell(ctx: Context<SellNft>, sale_lamports: u64) -> Result<()> {
-        sell::sell(ctx, sale_lamports)
+    pub fn fixed_price_listing(
+        ctx: Context<FixedPriceListing>,
+        start_date: u64,
+        end_date: u64,
+    ) -> Result<()> {
+        fixed_price_nft_listing(ctx, start_date, end_date)
     }
 }
