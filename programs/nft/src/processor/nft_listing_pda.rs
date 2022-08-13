@@ -10,7 +10,7 @@ pub fn create_nft_listing_pda(ctx: Context<CreateNftListing>) -> Result<()> {
 
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
     nft_listing_account.amount = 0;
-    nft_listing_account.status = NftListingStatus::Closed;
+    nft_listing_account.active = false;
 
     Ok(())
 }
@@ -38,11 +38,5 @@ pub struct CreateNftListing<'info> {
 #[account]
 pub struct NftListingData {
     pub amount: u32,
-    pub status: NftListingStatus,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
-pub enum NftListingStatus {
-    Active,
-    Closed,
+    pub active: bool,
 }

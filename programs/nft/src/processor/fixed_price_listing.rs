@@ -1,11 +1,15 @@
 use {anchor_lang::prelude::*, anchor_spl::token};
 
-use crate::{error::ErrorCode, processor::nft_listing_pda::*};
+use crate::{
+    error::ErrorCode,
+    processor::{fixed_price_listing_pda::*, nft_listing_pda::*},
+};
 
-pub fn fixed_price_nft_listing(
+pub fn fixed_price_list_fn(
     ctx: Context<FixedPriceListing>,
     start_date: u64,
     end_date: u64,
+    price_lamports: u64,
 ) -> Result<()> {
     msg!("Start the Fixed Price listing Process");
 
@@ -14,16 +18,9 @@ pub fn fixed_price_nft_listing(
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
 
     msg!("nft_listing_account amount: {}", nft_listing_account.amount);
-    msg!(
-        "nft_listing_account Active: {}",
-        nft_listing_account.status == NftListingStatus::Active
-    );
-    msg!(
-        "nft_listing_account Closed: {}",
-        nft_listing_account.status == NftListingStatus::Closed
-    );
+    msg!("nft_listing_account active: {}", nft_listing_account.active);
 
-    if nft_listing_account.status == NftListingStatus::Active {
+    if nft_listing_account.active {
         return Err(ErrorCode::NftAlreadyListed.into());
     }
 
@@ -50,21 +47,17 @@ pub fn fixed_price_nft_listing(
         100000000,
     )?;
 
+    // update the listing data
+    let listing_account = &mut ctx.accounts.listing_account;
+    listing_account.price = Some(price_lamports);
+    listing_account.start_date = Some(start_date);
+    listing_account.end_date = Some(end_date);
+    listing_account.is_active = Some(true);
+
     // // update the nft listing data
 
-    // nft_listing_account.amount = nft_listing_account.amount + 1;
-    // nft_listing_account.status = NftListingStatus::Active;
-
-    // // update the listing data
-    // let listing_account = &mut ctx.accounts.listing_account;
-    // listing_account.buyer = &ctx.accounts.owner.key();
-    // listing_account.buyer_token = &ctx.accounts.owner_token_address.key();
-    // listing_account.mint = &ctx.accounts.mint.key();
-    // listing_account.price = price;
-    // listing_account.start_date = start_date;
-    // listing_account.end_date = end_date;
-    // listing_account.close_date = 0;
-
+    nft_listing_account.amount = nft_listing_account.amount + 1;
+    nft_listing_account.active = true;
     Ok(())
 }
 
@@ -80,31 +73,6 @@ pub struct FixedPriceListing<'info> {
     pub token_program: Program<'info, token::Token>,
     #[account()]
     pub program_account: Signer<'info>,
-    // #[account(
-    //     init,
-    //     payer = owner,
-    //     space = 82,
-    //     seeds = [
-    //         nft_listing_account.key().as_ref(),
-    //         b"_",
-    //         (nft_listing_account.amount + 1).to_string().as_ref()
-    //     ],
-    //     bump
-    // )]
-    // pub listing_account: Account<'info, FixedPriceListingData>,
+    #[account(mut)]
+    pub listing_account: Account<'info, FixedPriceListingData>,
 }
-
-// #[account]
-// #[derive(Default)]
-// pub struct FixedPriceListingData {
-//     pub buyer: Pubkey,
-//     pub buyer_token: Pubkey,
-//     pub mint: Pubkey,
-//     pub seller: Option<Pubkey>,
-//     pub seller_token: Option<Pubkey>,
-//     pub price: u64,
-//     pub start_date: u64,
-//     pub end_date: u64,
-//     pub close_date: u64,
-//     pub sold: bool,
-// }
