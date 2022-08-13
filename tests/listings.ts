@@ -1,17 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
 import { Listings } from "../target/types/listings";
-import {
-  createMint,
-  getOrCreateAssociatedTokenAccount,
-  getAccount,
-  mintTo,
-  createSetAuthorityInstruction,
-  AuthorityType,
-  approveChecked,
-  transfer,
-} from "@solana/spl-token";
-import { clusterApiUrl, Connection } from "@solana/web3.js";
 
 describe("listings", () => {
   // Configure the client to use the local cluster.
@@ -19,6 +8,10 @@ describe("listings", () => {
 
   let payer: anchor.web3.Keypair;
   let buyer: anchor.web3.Keypair;
+  let mint: anchor.web3.PublicKey;
+  let ownerTokenAddress: anchor.web3.PublicKey;
+  let nftPda;
+  let listingPda;
   let programAccount: anchor.web3.Keypair;
   const program = anchor.workspace.Listings as Program<Listings>;
 
@@ -35,46 +28,135 @@ describe("listings", () => {
     const programSecretKey = Uint8Array.from(programAccountKey);
     programAccount = anchor.web3.Keypair.fromSecretKey(programSecretKey);
   });
-  it("Listing", async () => {
-    const mint: anchor.web3.PublicKey = new anchor.web3.PublicKey(
-      "85ydm3AHhcL5CP5ErUmHyWcueAMbe6Wqyb4ETbYJZMis",
+  it("Create Nft Pda ", async () => {
+    console.log(
+      "Create Nft Pda --------------------------------------------------------------------",
+    );
+    mint = new anchor.web3.PublicKey(
+      "3kdz5GjGUmVPPnAmBnSeW5garYMrZjo2TFUDDc1KLCW7",
     );
 
-    let [pda, _] = await anchor.web3.PublicKey.findProgramAddress(
+    console.log("mint", mint.toString());
+    let findNftPda = await anchor.web3.PublicKey.findProgramAddress(
       [mint.toBuffer(), Buffer.from("_state")],
       program.programId,
     );
-
+    nftPda = findNftPda[0];
     // create the nft listing
     try {
       let transaction = await program.methods
-        .createNftListing()
+        .createNftListingPda()
         .accounts({
           mint: mint,
           owner: payer.publicKey,
-          nftListingAccount: pda,
+          nftListingAccount: nftPda,
         })
         .signers([payer])
         .rpc();
       console.log("Your transaction signature", transaction);
-    } catch (e) {}
+      console.log("Data", nftPda.toString());
+    } catch (e) {
+      console.log("error", e);
+    }
+  });
+  it("Create Listing Pda", async () => {
+    console.log(
+      "Create Listing Pda --------------------------------------------------------------------",
+    );
+    const nftListingData = await program.account.nftListingData.fetch(nftPda);
+    let count = nftListingData.amount + 1;
 
-    const ownerTokenAddress = await anchor.utils.token.associatedAddress({
+    console.log("nft listing count", count);
+    let listing = await anchor.web3.PublicKey.findProgramAddress(
+      [nftPda.toBuffer(), Buffer.from("_"), Buffer.from(`${count}`)],
+      program.programId,
+    );
+
+    listingPda = listing[0];
+
+    try {
+      let transaction = await program.methods
+        .createFixedPriceListingPda(`${count}`)
+        .accounts({
+          mint: mint,
+          seller: payer.publicKey,
+          nftListingAccount: nftPda,
+          listingAccount: listingPda,
+        })
+        .signers([payer])
+        .rpc();
+
+      console.log("fixed price listing pda transaction signature", transaction);
+    } catch (e) {
+      console.log(e);
+    }
+
+    const listingData = await program.account.fixedPriceListingData.fetch(
+      listing[0],
+    );
+    console.log("listingData", listingData);
+  });
+  it("Create Listing", async () => {
+    console.log(
+      "Create Listing --------------------------------------------------------------------",
+    );
+    ownerTokenAddress = await anchor.utils.token.associatedAddress({
       mint: mint,
       owner: payer.publicKey,
     });
-    let startTime: number = new Date().getTime() / 1000 + 30000;
-    let endTime: number = new Date().getTime() / 1000 + 6000 * 6000 * 24;
-    let transaction = await program.methods
-      .fixedPriceListing(new anchor.BN(startTime), new anchor.BN(endTime))
-      .accounts({
-        owner: payer.publicKey,
-        nftListingAccount: pda,
-        programAccount: programAccount.publicKey,
-        ownerTokenAccount: ownerTokenAddress,
-      })
-      .signers([payer, programAccount])
-      .rpc();
-    console.log("Your transaction signature", transaction);
+    const startTime: number = new Date().getTime() / 1000 + 30000;
+    const endTime: number = new Date().getTime() / 1000 + 6000 * 6000 * 24;
+
+    const saleAmount = 1 * anchor.web3.LAMPORTS_PER_SOL;
+    try {
+      let transaction = await program.methods
+        .createFixedPriceListing(
+          new anchor.BN(startTime),
+          new anchor.BN(endTime),
+          new anchor.BN(saleAmount),
+        )
+        .accounts({
+          owner: payer.publicKey,
+          nftListingAccount: nftPda,
+          programAccount: programAccount.publicKey,
+          ownerTokenAccount: ownerTokenAddress,
+          listingAccount: listingPda,
+        })
+        .signers([payer, programAccount])
+        .rpc();
+      console.log("Your transaction signature", transaction);
+      const listingData = await program.account.fixedPriceListingData.fetch(
+        listingPda,
+      );
+      console.log("listingData", listingData);
+    } catch (e) {
+      console.log("error", e);
+    }
+  });
+  it("close ", async () => {
+    try {
+      console.log(
+        "Close Nft Listing --------------------------------------------------------------------",
+      );
+      let transaction = await program.methods
+        .closeFixedPriceListing()
+        .accounts({
+          nftListingAccount: nftPda,
+          listingAccount: listingPda,
+          mint: mint,
+          owner: payer.publicKey,
+          ownerTokenAccount: ownerTokenAddress,
+        })
+        .signers([payer])
+        .rpc();
+      console.log("Your transaction signature", transaction);
+      const listingData = await program.account.fixedPriceListingData.fetch(
+        listingPda,
+      );
+      const nftData = await program.account.nftListingData.fetch(nftPda);
+      console.log({ listingData, nftData });
+    } catch (e) {
+      console.log("error", e);
+    }
   });
 });
