@@ -3,7 +3,7 @@ use {
     anchor_spl::{associated_token, token},
 };
 
-use crate::processor::nft_listing_pda::*;
+use crate::processor::create_nft_listing_pda::*;
 
 pub fn create_fixed_price_listing_pda_fn(
     ctx: Context<CreateFixedPriceListingPda>,
@@ -12,6 +12,7 @@ pub fn create_fixed_price_listing_pda_fn(
     msg!("Fixed Price nft Listing count:{}...", count);
 
     // fetch token account of the seller
+
     let seller_token = associated_token::get_associated_token_address(
         &ctx.accounts.seller.key(),
         &ctx.accounts.mint.key(),

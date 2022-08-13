@@ -2,11 +2,11 @@ use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
     error::ErrorCode,
-    processor::{fixed_price_listing_pda::*, nft_listing_pda::*},
+    processor::{create_fixed_price_listing_pda::*, create_nft_listing_pda::*},
 };
 
-pub fn fixed_price_list_fn(
-    ctx: Context<FixedPriceListing>,
+pub fn create_fixed_price_listing_fn(
+    ctx: Context<CreateFixedPriceListing>,
     start_date: u64,
     end_date: u64,
     price_lamports: u64,
@@ -62,7 +62,7 @@ pub fn fixed_price_list_fn(
 }
 
 #[derive(Accounts)]
-pub struct FixedPriceListing<'info> {
+pub struct CreateFixedPriceListing<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
     #[account(mut)]

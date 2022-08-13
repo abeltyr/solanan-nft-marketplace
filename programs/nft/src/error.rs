@@ -7,6 +7,9 @@ pub enum ErrorCode {
     // 5000
     #[msg("Nft Is Already Listed")]
     NftAlreadyListed,
+    // 5001
+    #[msg("Provided Token Account don't match signer")]
+    InvalidTokenAccount,
     // 6000
     #[msg("No valid signer present")]
     NoValidSignerPresent,
