@@ -49,7 +49,7 @@ pub fn create_fixed_price_listing_fn(
 
     // update the listing data
     let listing_account = &mut ctx.accounts.listing_account;
-    listing_account.price = Some(price_lamports);
+    listing_account.price_lamports = Some(price_lamports);
     listing_account.start_date = Some(start_date);
     listing_account.end_date = Some(end_date);
     listing_account.is_active = Some(true);
