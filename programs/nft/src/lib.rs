@@ -5,11 +5,11 @@ pub mod processor;
 pub mod error;
 
 use crate::processor::{
-    close_fixed_price_listing::*, create_fixed_price_listing::*, create_fixed_price_listing_pda::*,
-    create_nft_listing_pda::*,
+    buy_nft_fixed_price_listing::*, close_fixed_price_listing::*, create_fixed_price_listing::*,
+    create_fixed_price_listing_pda::*, create_nft_listing_pda::*,
 };
 
-declare_id!("8BMStoEUDDeLG6DhcL1z51Vgoab2mWcCTHmupr7URDhv");
+declare_id!("EdAJzcZQ4uZsHkns6Rc5Dj7Zxv9my13oTCSAwtBN7hwX");
 
 #[program]
 pub mod listings {
@@ -37,5 +37,9 @@ pub mod listings {
 
     pub fn close_fixed_price_listing(ctx: Context<CloseFixedPriceListing>) -> Result<()> {
         close_fixed_price_listing_fn(ctx)
+    }
+
+    pub fn buy_nft_fixed_price_listing(ctx: Context<BuyNftFixedPriceListing>) -> Result<()> {
+        buy_nft_fixed_price_listing_fn(ctx)
     }
 }

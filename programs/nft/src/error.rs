@@ -10,6 +10,18 @@ pub enum ErrorCode {
     // 5001
     #[msg("Provided Token Account don't match signer")]
     InvalidTokenAccount,
+    // 5002
+    #[msg("Listing is not activated or setup")]
+    ListingNotActivate,
+    // 5003
+    #[msg("Listing doesn't have the price setup")]
+    ListingPriceNotSet,
+    // 5004
+    #[msg("Listing has been closed")]
+    ListingAlreadyClosed,
+    // 5004
+    #[msg("Nft is not Listed")]
+    NftNotListed,
     // 6000
     #[msg("No valid signer present")]
     NoValidSignerPresent,

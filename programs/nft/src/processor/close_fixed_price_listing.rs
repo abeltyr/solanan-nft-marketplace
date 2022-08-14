@@ -40,7 +40,7 @@ pub fn close_fixed_price_listing_fn(ctx: Context<CloseFixedPriceListing>) -> Res
     let listing_account = &mut ctx.accounts.listing_account;
     listing_account.close_date = Some(close_date);
     listing_account.sold = Some(false);
-    listing_account.is_active = Some(false);
+    listing_account.is_active = false;
 
     Ok(())
 }

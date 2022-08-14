@@ -23,14 +23,11 @@ pub fn create_fixed_price_listing_pda_fn(
     listing_account.seller = ctx.accounts.seller.key();
     listing_account.mint = ctx.accounts.mint.key();
     listing_account.seller_token = Some(seller_token.key());
-    listing_account.price_lamports = Some(0);
+    listing_account.price_lamports = 0;
     listing_account.start_date = Some(0);
     listing_account.end_date = Some(0);
     listing_account.close_date = Some(0);
-    listing_account.sold = Some(false);
-    listing_account.is_active = Some(false);
-    listing_account.fund_withdrawn = Some(false);
-    listing_account.fund_deposited = Some(false);
+    listing_account.is_active = false;
 
     Ok(())
 }
@@ -67,12 +64,12 @@ pub struct FixedPriceListingData {
     pub seller_token: Option<Pubkey>,
     pub buyer: Option<Pubkey>,
     pub buyer_token: Option<Pubkey>,
-    pub price_lamports: Option<u64>,
+    pub price_lamports: u64,
     pub start_date: Option<u64>,
     pub end_date: Option<u64>,
     pub close_date: Option<u64>,
     pub sold: Option<bool>,
-    pub is_active: Option<bool>,
+    pub is_active: bool,
     pub fund_withdrawn: Option<bool>,
     pub fund_deposited: Option<bool>,
 }

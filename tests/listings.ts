@@ -10,6 +10,7 @@ describe("listings", () => {
   let buyer: anchor.web3.Keypair;
   let mint: anchor.web3.PublicKey;
   let ownerTokenAddress: anchor.web3.PublicKey;
+  let buyerTokenAddress: anchor.web3.PublicKey;
   let nftPda;
   let listingPda;
   let programAccount: anchor.web3.Keypair;
@@ -33,7 +34,7 @@ describe("listings", () => {
       "Create Nft Pda --------------------------------------------------------------------",
     );
     mint = new anchor.web3.PublicKey(
-      "3kdz5GjGUmVPPnAmBnSeW5garYMrZjo2TFUDDc1KLCW7",
+      "Do97xuYYTbHiFsTFZJiH2S8mCGFsDuTnFCaQgwZqbVJg",
     );
 
     console.log("mint", mint.toString());
@@ -107,7 +108,7 @@ describe("listings", () => {
     const startTime: number = new Date().getTime() / 1000 + 30000;
     const endTime: number = new Date().getTime() / 1000 + 6000 * 6000 * 24;
 
-    const saleAmount = 1 * anchor.web3.LAMPORTS_PER_SOL;
+    const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
     try {
       let transaction = await program.methods
         .createFixedPriceListing(
@@ -148,6 +149,39 @@ describe("listings", () => {
           ownerTokenAccount: ownerTokenAddress,
         })
         .signers([payer])
+        .rpc();
+      console.log("Your transaction signature", transaction);
+      const listingData = await program.account.fixedPriceListingData.fetch(
+        listingPda,
+      );
+      const nftData = await program.account.nftListingData.fetch(nftPda);
+      console.log({ listingData, nftData });
+    } catch (e) {
+      console.log("error", e);
+    }
+  });
+  it.skip("buy ", async () => {
+    try {
+      console.log(
+        "Buy Nft From Listing --------------------------------------------------------------------",
+      );
+      buyerTokenAddress = await anchor.utils.token.associatedAddress({
+        mint: mint,
+        owner: buyer.publicKey,
+      });
+      let transaction = await program.methods
+        .buyNftFixedPriceListing()
+        .accounts({
+          nftListingAccount: nftPda,
+          listingAccount: listingPda,
+          mint: mint,
+          buyer: buyer.publicKey,
+          seller: payer.publicKey,
+          buyerTokenAccount: buyerTokenAddress,
+          sellerTokenAccount: ownerTokenAddress,
+          programAccount: programAccount.publicKey,
+        })
+        .signers([buyer, programAccount])
         .rpc();
       console.log("Your transaction signature", transaction);
       const listingData = await program.account.fixedPriceListingData.fetch(
