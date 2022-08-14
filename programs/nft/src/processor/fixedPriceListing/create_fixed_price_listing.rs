@@ -2,7 +2,9 @@ use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
     error::ErrorCode,
-    processor::{create_fixed_price_listing_pda::*, create_nft_listing_pda::*},
+    processor::fixedPriceListing::utils::{
+        create_fixed_price_listing_pda::*, create_nft_listing_pda::*,
+    },
 };
 
 pub fn create_fixed_price_listing_fn(

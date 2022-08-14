@@ -5,9 +5,10 @@ use {
 
 use crate::{
     error::ErrorCode,
-    processor::{create_fixed_price_listing_pda::*, create_nft_listing_pda::*},
+    processor::fixedPriceListing::utils::{
+        create_fixed_price_listing_pda::*, create_nft_listing_pda::*,
+    },
 };
-
 pub fn close_fixed_price_listing_fn(ctx: Context<CloseFixedPriceListing>) -> Result<()> {
     msg!("Closing The Fixed Price Listing...");
 

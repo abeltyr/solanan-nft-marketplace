@@ -5,9 +5,10 @@ use {
 
 use crate::{
     error::ErrorCode,
-    processor::{create_fixed_price_listing_pda::*, create_nft_listing_pda::*},
+    processor::fixedPriceListing::utils::{
+        create_fixed_price_listing_pda::*, create_nft_listing_pda::*,
+    },
 };
-
 pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> Result<()> {
     msg!("Buy The Nft...");
 
