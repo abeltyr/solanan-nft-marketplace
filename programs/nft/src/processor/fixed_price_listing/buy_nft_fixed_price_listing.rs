@@ -5,7 +5,7 @@ use {
 
 use crate::{
     error::ErrorCode,
-    processor::fixedPriceListing::utils::{
+    processor::fixed_price_listing::utils::{
         create_fixed_price_listing_pda::*, create_nft_listing_pda::*,
     },
 };
@@ -17,14 +17,29 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
     let listing_account = &mut ctx.accounts.listing_account;
 
+    msg!(
+        "checking if nft_listing_account is active: {}",
+        nft_listing_account.active
+    );
     if !nft_listing_account.active {
         return Err(ErrorCode::NftNotListed.into());
     }
 
+    msg!(
+        "checking listing_account price: {}",
+        listing_account.price_lamports
+    );
     if listing_account.price_lamports == 0 {
         return Err(ErrorCode::ListingPriceNotSet.into());
     }
 
+    msg!(
+        "checking listing is closed: {}",
+        listing_account.close_date > Some(0)
+            || listing_account.sold.is_some()
+            || listing_account.fund_withdrawn.is_some()
+            || listing_account.fund_deposited.is_some()
+    );
     if listing_account.close_date > Some(0)
         || listing_account.sold.is_some()
         || listing_account.fund_withdrawn.is_some()
@@ -32,6 +47,13 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
     {
         return Err(ErrorCode::ListingAlreadyClosed.into());
     }
+
+    msg!(
+        "checking listing_account is activated: {}",
+        listing_account.start_date == Some(0)
+            || listing_account.end_date == Some(0)
+            || !listing_account.is_active
+    );
 
     if listing_account.start_date == Some(0)
         || listing_account.end_date == Some(0)

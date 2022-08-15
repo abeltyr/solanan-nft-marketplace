@@ -1,1 +1,1 @@
-pub mod fixedPriceListing;
+pub mod fixed_price_listing;

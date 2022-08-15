@@ -4,14 +4,14 @@ pub mod processor;
 
 pub mod error;
 
-use crate::processor::fixedPriceListing::{
-    buy_nft_fixed_price_listing::*,
+use crate::processor::fixed_price_listing::{
+    // buy_nft_fixed_price_listing::*,
     close_fixed_price_listing::*,
     create_fixed_price_listing::*,
     utils::{create_fixed_price_listing_pda::*, create_nft_listing_pda::*},
 };
 
-declare_id!("EdAJzcZQ4uZsHkns6Rc5Dj7Zxv9my13oTCSAwtBN7hwX");
+declare_id!("5ebdoYppNxLGCvXth3V3cSw9TjWpzPUZYufo8DrU9zRf");
 
 #[program]
 pub mod listings {
@@ -41,7 +41,7 @@ pub mod listings {
         close_fixed_price_listing_fn(ctx)
     }
 
-    pub fn buy_nft_fixed_price_listing(ctx: Context<BuyNftFixedPriceListing>) -> Result<()> {
-        buy_nft_fixed_price_listing_fn(ctx)
-    }
+    // pub fn buy_nft_fixed_price_listing(ctx: Context<BuyNftFixedPriceListing>) -> Result<()> {
+    //     buy_nft_fixed_price_listing_fn(ctx)
+    // }
 }

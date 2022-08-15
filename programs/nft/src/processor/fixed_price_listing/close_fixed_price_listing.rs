@@ -5,7 +5,7 @@ use {
 
 use crate::{
     error::ErrorCode,
-    processor::fixedPriceListing::utils::{
+    processor::fixed_price_listing::utils::{
         create_fixed_price_listing_pda::*, create_nft_listing_pda::*,
     },
 };
