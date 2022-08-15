@@ -3,10 +3,7 @@ use {
     anchor_spl::{associated_token, token},
 };
 
-use crate::{
-    error::ErrorCode::NftAlreadyListed,
-    processor::fixed_price_listing::utils::create_nft_listing_pda::*,
-};
+use crate::{error::ErrorCode::NftAlreadyListed, utils::create_nft_listing_pda::*};
 
 pub fn create_fixed_price_listing_pda_fn(
     ctx: Context<CreateFixedPriceListingPda>,
