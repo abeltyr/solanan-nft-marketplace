@@ -11,7 +11,7 @@ pub fn create_english_auction_listing_fn(
     end_date: u64,
     starting_price_lamports: u64,
 ) -> Result<()> {
-    msg!("Start the Fixed Price listing Process");
+    msg!("Start the English Auction listing Process");
 
     // Fetch the nft listing account data and validate the nft status (check if nft is already is listed or not)
 
