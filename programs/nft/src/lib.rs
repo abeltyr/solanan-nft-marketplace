@@ -2,14 +2,18 @@ use anchor_lang::prelude::*;
 
 pub mod processor;
 
+pub mod utils;
+
 pub mod error;
 
-use crate::processor::{
-    buy_nft_fixed_price_listing::*, close_fixed_price_listing::*, create_fixed_price_listing::*,
-    create_fixed_price_listing_pda::*, create_nft_listing_pda::*,
+use crate::{
+    processor::fixed_price_listing::{
+        buy_nft_fixed_price_listing::*, close_fixed_price_listing::*, create_fixed_price_listing::*,
+    },
+    utils::{create_fixed_price_listing_pda::*, create_nft_listing_pda::*},
 };
 
-declare_id!("EdAJzcZQ4uZsHkns6Rc5Dj7Zxv9my13oTCSAwtBN7hwX");
+declare_id!("4FmkoSrDUshzt56oisNXQBjXHESG5zFVNy2kaj1fck7G");
 
 #[program]
 pub mod listings {

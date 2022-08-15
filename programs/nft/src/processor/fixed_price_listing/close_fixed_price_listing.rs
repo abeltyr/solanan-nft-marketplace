@@ -5,9 +5,8 @@ use {
 
 use crate::{
     error::ErrorCode,
-    processor::{create_fixed_price_listing_pda::*, create_nft_listing_pda::*},
+    utils::{create_fixed_price_listing_pda::*, create_nft_listing_pda::*},
 };
-
 pub fn close_fixed_price_listing_fn(ctx: Context<CloseFixedPriceListing>) -> Result<()> {
     msg!("Closing The Fixed Price Listing...");
 
@@ -20,6 +19,10 @@ pub fn close_fixed_price_listing_fn(ctx: Context<CloseFixedPriceListing>) -> Res
     if owner_token_account.key() != ctx.accounts.owner_token_account.key() {
         return Err(ErrorCode::InvalidTokenAccount.into());
     }
+
+    // add an extra layer to prevent closing already closed listing
+
+    // add a layer to only let owner and program close the listing
 
     // revoke program nft id
     token::revoke(CpiContext::new(

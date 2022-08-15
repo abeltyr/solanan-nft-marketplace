@@ -3,7 +3,7 @@ use {
     anchor_spl::{associated_token, token},
 };
 
-use crate::processor::create_nft_listing_pda::*;
+use crate::{error::ErrorCode::NftAlreadyListed, utils::create_nft_listing_pda::*};
 
 pub fn create_fixed_price_listing_pda_fn(
     ctx: Context<CreateFixedPriceListingPda>,
@@ -11,8 +11,11 @@ pub fn create_fixed_price_listing_pda_fn(
 ) -> Result<()> {
     msg!("Fixed Price nft Listing count:{}...", count);
 
-    // fetch token account of the seller
+    if ctx.accounts.nft_listing_account.active {
+        return Err(NftAlreadyListed.into());
+    }
 
+    // fetch token account of the seller
     let seller_token = associated_token::get_associated_token_address(
         &ctx.accounts.seller.key(),
         &ctx.accounts.mint.key(),
@@ -44,7 +47,7 @@ pub struct CreateFixedPriceListingPda<'info> {
     #[account(
         init,
         payer = seller,
-        space = 164,
+        space = 250,
         seeds = [
             nft_listing_account.key().as_ref(),
             b"_",
@@ -70,6 +73,5 @@ pub struct FixedPriceListingData {
     pub close_date: Option<u64>,
     pub sold: Option<bool>,
     pub is_active: bool,
-    pub fund_withdrawn: Option<bool>,
-    pub fund_deposited: Option<bool>,
+    pub fund_sent: Option<bool>,
 }
