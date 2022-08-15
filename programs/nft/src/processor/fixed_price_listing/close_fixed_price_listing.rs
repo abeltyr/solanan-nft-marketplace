@@ -22,6 +22,10 @@ pub fn close_fixed_price_listing_fn(ctx: Context<CloseFixedPriceListing>) -> Res
         return Err(ErrorCode::InvalidTokenAccount.into());
     }
 
+    // add an extra layer to prevent closing already closed listing
+
+    // add a layer to only let owner and program close the listing
+
     // revoke program nft id
     token::revoke(CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
