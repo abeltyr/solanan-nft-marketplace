@@ -1,12 +1,12 @@
 [package]
 description = "Created with Anchor"
 edition = "2021"
-name = "nft"
+name = "listings"
 version = "0.1.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "nft"
+name = "listings"
 
 [features]
 cpi = ["no-entrypoint"]

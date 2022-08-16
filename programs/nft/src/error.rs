@@ -32,12 +32,15 @@ pub enum ErrorCode {
     #[msg("Seller Token Account is not owner of the nft")]
     TokenAccountOwnerIssue,
     // 5009
-    #[msg("Insufficient fund in you account")]
-    InsufficientFunds,
+    #[msg("Seller dat provided doesn't match")]
+    SellerDataIssue,
     // 5010
     #[msg("StartDate cannot be in the past")]
     StartDateIsInPast,
     // 5011
     #[msg("EndDate should not be earlier than StartDate")]
     EndDateIsEarlierThanBeginDate,
+    // 5012
+    #[msg("Invalid Data input given")]
+    InvalidDate,
 }
