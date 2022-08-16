@@ -5,7 +5,7 @@ import {
   getAccount,
 } from "@solana/spl-token";
 import { clusterApiUrl, Connection } from "@solana/web3.js";
-import { Listings } from "../target/types/listings";
+import { Listings } from "../../target/types/listings";
 
 describe("listings", () => {
   // Configure the client to use the local cluster.
@@ -25,20 +25,20 @@ describe("listings", () => {
   it("setup data", async () => {
     let payerAccountKey = require(process.env.ANCHOR_WALLET);
     const payerSecretKey = Uint8Array.from(payerAccountKey);
-    payer = anchor.web3.Keypair.fromSecretKey(payerSecretKey);
+    buyer = anchor.web3.Keypair.fromSecretKey(payerSecretKey);
 
-    let accountKey = require("./keypairs/second.json");
+    let accountKey = require("../keypairs/second.json");
     const secretKey = Uint8Array.from(accountKey);
-    buyer = anchor.web3.Keypair.fromSecretKey(secretKey);
+    payer = anchor.web3.Keypair.fromSecretKey(secretKey);
 
-    let programAccountKey = require("../target/deploy/listings-keypair.json");
+    let programAccountKey = require("../../target/deploy/listings-keypair.json");
     const programSecretKey = Uint8Array.from(programAccountKey);
     programAccount = anchor.web3.Keypair.fromSecretKey(programSecretKey);
 
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "HJQox3ocVC99Q1A8QEujJLBndiWg6SeyCNVjbsyyhUdD",
+      "DsnX31rPnqPSKpb6XCCgvJSXTWXoYDdkrfvhCh2KRwM2",
     );
 
     ownerTokenAddress = await anchor.utils.token.associatedAddress({
@@ -111,10 +111,6 @@ describe("listings", () => {
     } catch (e) {
       console.log("Listing Pda Exist", e);
     }
-    const listingData = await program.account.fixedPriceListingData.fetch(
-      listing[0],
-    );
-    console.log("listingData", listingData);
   });
   it("Create Listing", async () => {
     console.log(

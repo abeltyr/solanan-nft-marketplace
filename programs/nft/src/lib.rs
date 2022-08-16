@@ -13,7 +13,7 @@ use crate::{
     utils::{create_fixed_price_listing_pda::*, create_nft_listing_pda::*},
 };
 
-declare_id!("4FmkoSrDUshzt56oisNXQBjXHESG5zFVNy2kaj1fck7G");
+declare_id!("D3544YeKkf5zB3ENMWiNR62kENQtJhkhCi2CbnruVrBi");
 
 #[program]
 pub mod listings {

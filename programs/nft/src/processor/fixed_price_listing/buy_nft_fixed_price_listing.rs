@@ -86,6 +86,10 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
 
     //--------------------------------------------------------//
 
+    if listing_account.seller != ctx.accounts.seller.key() {
+        return Err(ErrorCode::InvalidDate.into());
+    }
+
     // transfer the fund
     system_program::transfer(
         CpiContext::new(
@@ -136,7 +140,8 @@ pub struct BuyNftFixedPriceListing<'info> {
     #[account(mut)]
     pub listing_account: Account<'info, FixedPriceListingData>,
     #[account(mut)]
-    pub seller: Signer<'info>,
+    /// CHECK:
+    pub seller: UncheckedAccount<'info>,
     #[account(mut)]
     pub seller_token_account: Account<'info, token::TokenAccount>,
     #[account()]
