@@ -31,6 +31,7 @@ pub fn create_english_auction_listing_fn(
     if start_date > end_date {
         return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
     }
+
     //check if listing is closed
     if listing_account.close_date > Some(0)
         || listing_account.sold.is_some()
@@ -38,6 +39,12 @@ pub fn create_english_auction_listing_fn(
     {
         return Err(ErrorCode::ListingAlreadyClosed.into());
     }
+
+    // check if the owner is also the pda creator
+    if ctx.accounts.owner.key() != listing_account.seller.key() {
+        return Err(ErrorCode::DataIssue.into());
+    }
+
     // approve the nft
     token::approve(
         CpiContext::new(

@@ -87,7 +87,7 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
     //--------------------------------------------------------//
 
     if listing_account.seller != ctx.accounts.seller.key() {
-        return Err(ErrorCode::InvalidDate.into());
+        return Err(ErrorCode::InvalidData.into());
     }
 
     // transfer the fund

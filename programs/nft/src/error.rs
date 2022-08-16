@@ -32,8 +32,8 @@ pub enum ErrorCode {
     #[msg("Seller Token Account is not owner of the nft")]
     TokenAccountOwnerIssue,
     // 5009
-    #[msg("Seller dat provided doesn't match")]
-    SellerDataIssue,
+    #[msg("Issue with the data provided")]
+    DataIssue,
     // 5010
     #[msg("StartDate cannot be in the past")]
     StartDateIsInPast,
@@ -42,5 +42,14 @@ pub enum ErrorCode {
     EndDateIsEarlierThanBeginDate,
     // 5012
     #[msg("Invalid Data input given")]
-    InvalidDate,
+    InvalidData,
+    // 5013
+    #[msg("Auction not started yet")]
+    AuctionNotStarted,
+    // 5014
+    #[msg("Auction has ended")]
+    AuctionEnded,
+    // 5015
+    #[msg("Auction Bid lower Than Highest Bidder")]
+    BidLowerThanHighestBider,
 }

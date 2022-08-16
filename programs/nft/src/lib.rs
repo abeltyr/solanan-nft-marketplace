@@ -9,7 +9,8 @@ pub mod error;
 use crate::{
     processor::{
         english_auction_listing::{
-            close_english_auction_listing::*, create_english_auction_listing::*,
+            bid_english_auction::*, close_english_auction_listing::*,
+            create_english_auction_listing::*,
         },
         fixed_price_listing::{
             buy_nft_fixed_price_listing::*, close_fixed_price_listing::*,
@@ -17,8 +18,8 @@ use crate::{
         },
     },
     utils::{
-        create_english_auction_listing_pda::*, create_fixed_price_listing_pda::*,
-        create_nft_listing_pda::*,
+        create_english_auction_bid_pda::*, create_english_auction_listing_pda::*,
+        create_fixed_price_listing_pda::*, create_nft_listing_pda::*,
     },
 };
 
@@ -74,5 +75,15 @@ pub mod listings {
 
     pub fn close_english_auction_listing(ctx: Context<CloseEnglishAuctionListing>) -> Result<()> {
         close_english_auction_listing_fn(ctx)
+    }
+
+    pub fn create_english_auction_bid_pda(ctx: Context<CreateEnglishAuctionBidPda>) -> Result<()> {
+        create_english_auction_bid_pda_fn(ctx)
+    }
+    pub fn bid_english_auction(
+        ctx: Context<BidEnglishAuction>,
+        bid_price_lamports: u64,
+    ) -> Result<()> {
+        bid_english_auction_fn(ctx, bid_price_lamports)
     }
 }
