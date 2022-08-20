@@ -74,7 +74,7 @@ describe("english auction", () => {
       "Create Listing Pda --------------------------------------------------------------------",
     );
     const nftListingData = await program.account.nftListingData.fetch(nftPda);
-    let count = nftListingData.amount;
+    let count = nftListingData.amount - 1;
 
     console.log("nft listing count", count);
     let listing = await anchor.web3.PublicKey.findProgramAddress(
@@ -101,56 +101,6 @@ describe("english auction", () => {
 
     bidPda = bidListingPda[0];
   });
-  // it("check buyer balance", async () => {
-  //   console.log(
-  //     "check For Listing --------------------------------------------------------------------",
-  //   );
-
-  //   const buyerData = await connection.getAccountInfo(buyer.publicKey);
-  //   console.log("buyerData", buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
-  // });
-  // it("bid ", async () => {
-  //   try {
-  //     console.log(
-  //       "Bid For Listing --------------------------------------------------------------------",
-  //     );
-
-  //     const saleAmount = 0.016 * anchor.web3.LAMPORTS_PER_SOL;
-
-  //     let transaction = await program.methods
-  //       .bidEnglishAuction(new anchor.BN(saleAmount))
-  //       .accounts({
-  //         auctionAccount: listingPda,
-  //         bidder: buyer.publicKey,
-  //         mint: mint,
-  //         bidAccount: bidPda,
-  //         bidderTokenAccount: buyerTokenAddress,
-  //         bidAccountVault: bidPda,
-  //         sellerTokenAccount: ownerTokenAddress,
-  //       })
-  //       .signers([buyer])
-  //       .rpc();
-  //     console.log("Your transaction signature", transaction);
-  //     const bidData = await program.account.englishAuctionListingBidData.fetch(
-  //       bidPda,
-  //     );
-  //     const listingData = await program.account.englishAuctionListingData.fetch(
-  //       listingPda,
-  //     );
-
-  //     console.log({ bidData, listingData });
-  //   } catch (e) {
-  //     console.log("error", e);
-  //   }
-  // });
-  // it("check buyer balance", async () => {
-  //   console.log(
-  //     "check For Listing --------------------------------------------------------------------",
-  //   );
-
-  //   const buyerData = await connection.getAccountInfo(buyer.publicKey);
-  //   console.log("buyerData", buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
-  // });
   it("close ", async () => {
     try {
       console.log(

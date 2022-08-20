@@ -16,20 +16,17 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
 
     // fetch token account of the owner
     let owner_token_account = associated_token::get_associated_token_address(
-        &listing_account.seller.key().clone(),
-        &listing_account.mint.key().clone(),
+        &listing_account.seller.key(),
+        &listing_account.mint.key(),
     );
 
     if owner_token_account.key() != ctx.accounts.owner_token_account.key() {
         return Err(ErrorCode::InvalidTokenAccount.into());
     }
 
-    // if ctx.accounts.owner_token_account.amount != 1 {
-    //     return Err(ErrorCode::TokenAccountOwnerIssue.into());
-    // }
-
-    //check if listing is already closed
+    // check if listing is already closed
     if listing_account.close_date > Some(0)
+        || !listing_account.is_active
         || listing_account.sold.is_some()
         || listing_account.fund_withdrawn.is_some()
     {
@@ -48,10 +45,10 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
     // update the nft listing pda
     nft_listing_account.active = false;
 
-    // close the fixed price listing pda
+    // // close the fixed price listing pda
     listing_account.close_date = Some(Clock::get().unwrap().unix_timestamp as u64);
-    listing_account.sold = Some(false);
     listing_account.is_active = false;
+    // listing_account.sold = Some(false);
 
     Ok(())
 }
