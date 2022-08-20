@@ -58,4 +58,7 @@ pub enum ErrorCode {
     // 5017
     #[msg("Auction has not been set yet")]
     AuctionNotSet,
+    // 5017
+    #[msg("The seller can't be bid")]
+    SellerBidIssue,
 }

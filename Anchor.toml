@@ -11,5 +11,10 @@ cluster = "devnet"
 wallet = "/home/av/.config/solana/id.json"
 
 [scripts]
-test-auction = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction.ts"
+test-auction-bid = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/bid.ts"
+test-auction-bidPda = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/bidPda.ts"
+test-auction-close = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/close.ts"
+test-auction-listing = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/listing.ts"
+test-auction-listingPda = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/listingPda.ts"
+test-auction-nftListing = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/nftListing.ts"
 test-fixed = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/fixed.ts"

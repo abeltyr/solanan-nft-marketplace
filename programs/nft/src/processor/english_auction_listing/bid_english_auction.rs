@@ -51,24 +51,42 @@ pub fn bid_english_auction_fn(
         return Err(ErrorCode::AuctionEnded.into());
     }
 
+    let bid_account_lamports_start = **ctx.accounts.bid_account_vault.lamports.borrow();
+
     // check if the bid is higher than starting price
-    if auction_account.starting_price_lamports > bid_price_lamports {
+    if auction_account.starting_price_lamports > bid_price_lamports + bid_account_lamports_start {
         return Err(ErrorCode::BidLowerThanStartingBid.into());
     }
 
     // check if the bid is higher than previous bid
     if auction_account.highest_bid_lamports.is_some()
         && auction_account.highest_bid_lamports.unwrap() > 0
-        && auction_account.highest_bid_lamports.unwrap() > bid_price_lamports
+        && auction_account.highest_bid_lamports.unwrap()
+            > bid_price_lamports + bid_account_lamports_start
     {
         return Err(ErrorCode::BidLowerThanHighestBider.into());
     }
 
     // validate so that the seller can distribute
 
-    msg!("mint :{:?}", ctx.accounts.mint);
+    let seller_token_account = associated_token::get_associated_token_address(
+        &auction_account.seller.clone(),
+        &auction_account.mint.clone(),
+    );
+
+    if seller_token_account.key() != ctx.accounts.seller_token_account.key() {
+        return Err(ErrorCode::InvalidTokenAccount.into());
+    }
 
     // validate if the token is still under the owner by the token account
+
+    if ctx.accounts.seller_token_account.delegate.is_none()
+        || ctx.accounts.seller_token_account.delegate.unwrap() != ctx.program_id.key()
+        || ctx.accounts.seller_token_account.delegated_amount != 100000000
+        || ctx.accounts.seller_token_account.amount != 1
+    {
+        return Err(ErrorCode::InvalidTokenAccountDelegation.into());
+    }
 
     // transfer the fund
     system_program::transfer(
@@ -92,13 +110,14 @@ pub fn bid_english_auction_fn(
         return Err(ErrorCode::InvalidTokenAccount.into());
     }
 
+    let bid_account_lamports_end = **ctx.accounts.bid_account_vault.lamports.borrow();
     bid_account.bidder_token = bidder_token_account.key();
-    bid_account.bid_price_lamports = Some(bid_price_lamports);
+    bid_account.bid_price_lamports = Some(bid_account_lamports_end);
     bid_account.bid_date = Some(clock);
     bid_account.fund_deposit = Some(true);
 
     auction_account.highest_bid_pda = Some(ctx.accounts.bid_account.key().clone());
-    auction_account.highest_bid_lamports = Some(bid_price_lamports);
+    auction_account.highest_bid_lamports = Some(bid_account_lamports_end);
     auction_account.highest_bidder = Some(ctx.accounts.bidder.key());
     auction_account.highest_bidder_token = Some(bidder_token_account.key());
 
@@ -113,8 +132,8 @@ pub struct BidEnglishAuction<'info> {
     pub bidder: Signer<'info>,
     #[account(mut)]
     pub bidder_token_account: Account<'info, token::TokenAccount>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, token::Token>,
+    #[account(mut)]
+    pub seller_token_account: Account<'info, token::TokenAccount>,
     #[account(mut)]
     pub auction_account: Account<'info, EnglishAuctionListingData>,
     #[account(mut)]
@@ -122,4 +141,6 @@ pub struct BidEnglishAuction<'info> {
     #[account(mut)]
     /// CHECK:
     pub bid_account_vault: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, token::Token>,
 }
