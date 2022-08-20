@@ -42,23 +42,24 @@ pub fn bid_english_auction_fn(
     let clock = Clock::get().unwrap().unix_timestamp as u64;
 
     // check if the start date has passed
-    if auction_account.start_date.unwrap() <= clock {
+    if auction_account.start_date.unwrap() > clock {
         return Err(ErrorCode::AuctionNotStarted.into());
     }
+
     // check if the end date has not passed
-    if auction_account.end_date.unwrap() > clock {
+    if auction_account.end_date.unwrap() < clock {
         return Err(ErrorCode::AuctionEnded.into());
     }
 
     // check if the bid is higher than starting price
-    if auction_account.starting_price_lamports <= bid_price_lamports {
+    if auction_account.starting_price_lamports > bid_price_lamports {
         return Err(ErrorCode::BidLowerThanStartingBid.into());
     }
 
     // check if the bid is higher than previous bid
     if auction_account.highest_bid_lamports.is_some()
         && auction_account.highest_bid_lamports.unwrap() > 0
-        && auction_account.highest_bid_lamports.unwrap() < bid_price_lamports
+        && auction_account.highest_bid_lamports.unwrap() > bid_price_lamports
     {
         return Err(ErrorCode::BidLowerThanHighestBider.into());
     }

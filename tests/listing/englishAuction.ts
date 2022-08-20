@@ -19,6 +19,7 @@ describe("english", () => {
   let buyerTokenAddress: anchor.web3.PublicKey;
   let nftPda;
   let listingPda;
+  let bidPda;
   let programAccount: anchor.web3.Keypair;
   const program = anchor.workspace.Listings as Program<Listings>;
 
@@ -27,24 +28,34 @@ describe("english", () => {
     const payerSecretKey = Uint8Array.from(payerAccountKey);
     payer = anchor.web3.Keypair.fromSecretKey(payerSecretKey);
 
-    let accountKey = require("./keypairs/second.json");
+    let accountKey = require("../keypairs/second.json");
     const secretKey = Uint8Array.from(accountKey);
     buyer = anchor.web3.Keypair.fromSecretKey(secretKey);
 
-    let programAccountKey = require("../target/deploy/listings-keypair.json");
+    let programAccountKey = require("../../target/deploy/listings-keypair.json");
     const programSecretKey = Uint8Array.from(programAccountKey);
     programAccount = anchor.web3.Keypair.fromSecretKey(programSecretKey);
 
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "9cmjNxLQJzJpRYE3gkzoJ7Bk1A5aiPxXhsABz2529Ryr",
+      "7EGHMZJ3iXJSRcpZvjEYLYMkSZPP2cjoFxXHMXpxRb5",
     );
 
-    ownerTokenAddress = await anchor.utils.token.associatedAddress({
-      mint: mint,
-      owner: payer.publicKey,
-    });
+    const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      payer,
+      mint,
+      payer.publicKey,
+    );
+    ownerTokenAddress = payerTokenAccount.address;
+    const buyerTokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      buyer,
+      mint,
+      buyer.publicKey,
+    );
+    buyerTokenAddress = buyerTokenAccount.address;
   });
   it("Create Nft Pda ", async () => {
     console.log(
@@ -81,7 +92,8 @@ describe("english", () => {
       "Create Listing Pda --------------------------------------------------------------------",
     );
     const nftListingData = await program.account.nftListingData.fetch(nftPda);
-    let count = nftListingData.amount;
+    let count = "20";
+    // nftListingData.amount;
 
     console.log("nft listing count", count);
     let listing = await anchor.web3.PublicKey.findProgramAddress(
@@ -101,6 +113,7 @@ describe("english", () => {
         .accounts({
           mint: mint,
           seller: payer.publicKey,
+          sellerToken: ownerTokenAddress,
           nftListingAccount: nftPda,
           listingAccount: listingPda,
         })
@@ -120,9 +133,10 @@ describe("english", () => {
     console.log(
       "Create Listing --------------------------------------------------------------------",
     );
-    const startTime: number = new Date().getTime() / 1000 + 30000;
-    const endTime: number = new Date().getTime() / 1000 + 6000 * 6000 * 24;
+    const startTime: number = new Date().getTime() / 1000 + 5;
+    const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
 
+    console.log(startTime, endTime);
     const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
     try {
       let transaction = await program.methods
@@ -150,60 +164,100 @@ describe("english", () => {
       // throw new Error(e);
     }
   });
+  it("bid pda", async () => {
+    try {
+      console.log(
+        "Bid Pda For Listing --------------------------------------------------------------------",
+      );
+
+      let bidListingPda = await anchor.web3.PublicKey.findProgramAddress(
+        [listingPda.toBuffer(), buyer.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      bidPda = bidListingPda[0];
+      let transaction = await program.methods
+        .createEnglishAuctionBidPda()
+        .accounts({
+          auctionAccount: listingPda,
+          bidder: buyer.publicKey,
+          mint: mint,
+          bidAccount: bidPda,
+        })
+        .signers([buyer])
+        .rpc();
+      console.log("Your transaction signature", transaction);
+    } catch (e) {
+      console.log("error", e);
+    }
+  });
+  it("check buyer balance", async () => {
+    console.log(
+      "check For Listing --------------------------------------------------------------------",
+    );
+
+    const buyerData = await connection.getAccountInfo(buyer.publicKey);
+    console.log("buyerData", buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
+  });
   it("bid ", async () => {
     try {
       console.log(
         "Bid For Listing --------------------------------------------------------------------",
       );
 
-      const buyerData = await connection.getAccountInfo(buyer.publicKey);
-      console.log(
-        "buyerData",
-        buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL,
-      );
-      const buyerTokenAccount = await getOrCreateAssociatedTokenAccount(
-        connection,
-        buyer,
-        mint,
-        buyer.publicKey,
-      );
-      buyerTokenAddress = buyerTokenAccount.address;
+      const saleAmount = 0.016 * anchor.web3.LAMPORTS_PER_SOL;
 
-      // buyerTokenAddress = await anchor.utils.token.associatedAddress({
-      //   mint: mint,
-      //   owner: buyer.publicKey,
-
-      // });
       let transaction = await program.methods
-        .buyNftFixedPriceListing()
+        .bidEnglishAuction(new anchor.BN(saleAmount))
         .accounts({
-          nftListingAccount: nftPda,
-          listingAccount: listingPda,
+          auctionAccount: listingPda,
+          bidder: buyer.publicKey,
           mint: mint,
-          buyer: buyer.publicKey,
-          seller: payer.publicKey,
-          buyerTokenAccount: buyerTokenAddress,
-          sellerTokenAccount: ownerTokenAddress,
-          programAccount: programAccount.publicKey,
+          bidAccount: bidPda,
+          bidderTokenAccount: buyerTokenAddress,
+          bidAccountVault: bidPda,
         })
-        .signers([buyer, programAccount])
+        .signers([buyer])
         .rpc();
       console.log("Your transaction signature", transaction);
-      const listingData = await program.account.fixedPriceListingData.fetch(
+      const bidData = await program.account.englishAuctionListingBidData.fetch(
+        bidPda,
+      );
+      const listingData = await program.account.englishAuctionListingData.fetch(
         listingPda,
       );
-      const nftData = await program.account.nftListingData.fetch(nftPda);
-      console.log({ listingData, nftData });
+
+      console.log({ bidData, listingData });
     } catch (e) {
       console.log("error", e);
-      throw new Error(e);
     }
+  });
+  it("check buyer balance", async () => {
+    console.log(
+      "check For Listing --------------------------------------------------------------------",
+    );
+
+    const buyerData = await connection.getAccountInfo(buyer.publicKey);
+    console.log("buyerData", buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
   });
   it("close ", async () => {
     try {
       console.log(
         "Close Nft Listing --------------------------------------------------------------------",
       );
+      console.log({
+        nftListingAccount: nftPda,
+        listingAccount: listingPda,
+        mint: mint,
+        owner: payer.publicKey,
+        ownerTokenAccount: ownerTokenAddress,
+      });
+
+      let listingData = await program.account.englishAuctionListingData.fetch(
+        listingPda,
+      );
+      let nftData = await program.account.nftListingData.fetch(nftPda);
+      console.log({ listingData, nftData });
       let transaction = await program.methods
         .closeEnglishAuctionListing()
         .accounts({
@@ -213,16 +267,15 @@ describe("english", () => {
           owner: payer.publicKey,
           ownerTokenAccount: ownerTokenAddress,
         })
-        .signers([payer])
+        .signers([])
         .rpc();
       console.log("Your transaction signature", transaction);
-      const listingData = await program.account.englishAuctionListingData.fetch(
+      listingData = await program.account.englishAuctionListingData.fetch(
         listingPda,
       );
-      const nftData = await program.account.nftListingData.fetch(nftPda);
+      nftData = await program.account.nftListingData.fetch(nftPda);
       console.log({ listingData, nftData });
     } catch (e) {
-      throw new Error(e);
       console.log("error", e);
     }
   });
