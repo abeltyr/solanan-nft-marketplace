@@ -50,7 +50,7 @@ pub struct CreateFixedPriceListingPda<'info> {
         space = 250,
         seeds = [
             nft_listing_account.key().as_ref(),
-            b"_",
+            b"_Fixed_Price_",
             count.as_ref(),
         ],
         bump

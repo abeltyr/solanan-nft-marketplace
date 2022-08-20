@@ -50,6 +50,12 @@ pub enum ErrorCode {
     #[msg("Auction has ended")]
     AuctionEnded,
     // 5015
-    #[msg("Auction Bid lower Than Highest Bidder")]
+    #[msg("Auction Bid lower than Highest bidder")]
     BidLowerThanHighestBider,
+    // 5016
+    #[msg("Auction Bid lower than startling bidder")]
+    BidLowerThanStartingBid,
+    // 5017
+    #[msg("Auction has not been set yet")]
+    AuctionNotSet,
 }

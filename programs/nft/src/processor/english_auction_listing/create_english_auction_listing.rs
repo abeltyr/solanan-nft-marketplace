@@ -2,7 +2,8 @@ use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
     error::ErrorCode,
-    utils::{create_english_auction_listing_pda::*, create_nft_listing_pda::*},
+    processor::english_auction_listing::utils::create_english_auction_listing_pda::*,
+    utils::create_nft_listing_pda::*,
 };
 
 pub fn create_english_auction_listing_fn(
@@ -62,6 +63,8 @@ pub fn create_english_auction_listing_fn(
     listing_account.starting_price_lamports = starting_price_lamports;
     listing_account.start_date = Some(start_date);
     listing_account.end_date = Some(end_date);
+    listing_account.close_date = Some(0);
+    listing_account.highest_bid_lamports = Some(0);
     listing_account.is_active = true;
 
     // update the nft listing data

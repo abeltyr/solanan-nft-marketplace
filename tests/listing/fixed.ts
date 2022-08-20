@@ -25,11 +25,11 @@ describe("listings", () => {
   it("setup data", async () => {
     let payerAccountKey = require(process.env.ANCHOR_WALLET);
     const payerSecretKey = Uint8Array.from(payerAccountKey);
-    buyer = anchor.web3.Keypair.fromSecretKey(payerSecretKey);
+    payer = anchor.web3.Keypair.fromSecretKey(payerSecretKey);
 
     let accountKey = require("../keypairs/second.json");
     const secretKey = Uint8Array.from(accountKey);
-    payer = anchor.web3.Keypair.fromSecretKey(secretKey);
+    buyer = anchor.web3.Keypair.fromSecretKey(secretKey);
 
     let programAccountKey = require("../../target/deploy/listings-keypair.json");
     const programSecretKey = Uint8Array.from(programAccountKey);
@@ -38,13 +38,23 @@ describe("listings", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "DsnX31rPnqPSKpb6XCCgvJSXTWXoYDdkrfvhCh2KRwM2",
+      "81TkuD4Z5mNyhysH93JuRWDuBmP6LWYY45KL4HBCQtRr",
     );
 
-    ownerTokenAddress = await anchor.utils.token.associatedAddress({
-      mint: mint,
-      owner: payer.publicKey,
-    });
+    const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      payer,
+      mint,
+      payer.publicKey,
+    );
+    ownerTokenAddress = payerTokenAccount.address;
+    const buyerTokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      buyer,
+      mint,
+      buyer.publicKey,
+    );
+    buyerTokenAddress = buyerTokenAccount.address;
   });
   it("Create Nft Pda ", async () => {
     console.log(
@@ -81,11 +91,16 @@ describe("listings", () => {
       "Create Listing Pda --------------------------------------------------------------------",
     );
     const nftListingData = await program.account.nftListingData.fetch(nftPda);
-    let count = nftListingData.amount + 1;
+    let count = 12;
+    // nftListingData.amount + 1;
 
     console.log("nft listing count", count);
     let listing = await anchor.web3.PublicKey.findProgramAddress(
-      [nftPda.toBuffer(), Buffer.from("_"), Buffer.from(`${count}`)],
+      [
+        nftPda.toBuffer(),
+        Buffer.from("_Fixed_Price_"),
+        Buffer.from(`${count}`),
+      ],
       program.programId,
     );
 
@@ -157,19 +172,7 @@ describe("listings", () => {
         "buyerData",
         buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL,
       );
-      const buyerTokenAccount = await getOrCreateAssociatedTokenAccount(
-        connection,
-        buyer,
-        mint,
-        buyer.publicKey,
-      );
-      buyerTokenAddress = buyerTokenAccount.address;
 
-      // buyerTokenAddress = await anchor.utils.token.associatedAddress({
-      //   mint: mint,
-      //   owner: buyer.publicKey,
-
-      // });
       let transaction = await program.methods
         .buyNftFixedPriceListing()
         .accounts({
@@ -195,7 +198,7 @@ describe("listings", () => {
       throw new Error(e);
     }
   });
-  it.skip("close ", async () => {
+  it("close ", async () => {
     try {
       console.log(
         "Close Nft Listing --------------------------------------------------------------------",
@@ -218,7 +221,6 @@ describe("listings", () => {
       const nftData = await program.account.nftListingData.fetch(nftPda);
       console.log({ listingData, nftData });
     } catch (e) {
-      throw new Error(e);
       console.log("error", e);
     }
   });

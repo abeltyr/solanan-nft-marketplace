@@ -3,7 +3,10 @@ use {
     anchor_spl::{associated_token, token},
 };
 
-use crate::{error::ErrorCode::NftAlreadyListed, utils::create_nft_listing_pda::*};
+use crate::{
+    error::ErrorCode::{InvalidTokenAccount, NftAlreadyListed},
+    utils::create_nft_listing_pda::*,
+};
 
 pub fn create_english_auction_listing_pda_fn(
     ctx: Context<CreateEnglishAuctionListingPda>,
@@ -15,21 +18,23 @@ pub fn create_english_auction_listing_pda_fn(
         return Err(NftAlreadyListed.into());
     }
 
+    msg!("mint :{:?}", ctx.accounts.mint);
+
     // fetch token account of the seller
     let seller_token = associated_token::get_associated_token_address(
         &ctx.accounts.seller.key(),
         &ctx.accounts.mint.key(),
     );
 
-    // // update the listing data
+    if seller_token.key() != ctx.accounts.seller_token.key() {
+        return Err(InvalidTokenAccount.into());
+    }
+
+    // update the listing data
     let listing_account = &mut ctx.accounts.listing_account;
     listing_account.mint = ctx.accounts.mint.key();
     listing_account.seller = ctx.accounts.seller.key();
-    listing_account.seller_token = Some(seller_token.key());
-    listing_account.starting_price_lamports = 0;
-    listing_account.start_date = Some(0);
-    listing_account.end_date = Some(0);
-    listing_account.close_date = Some(0);
+    listing_account.seller_token = seller_token.key();
     listing_account.is_active = false;
 
     Ok(())
@@ -40,6 +45,8 @@ pub fn create_english_auction_listing_pda_fn(
 pub struct CreateEnglishAuctionListingPda<'info> {
     #[account(mut)]
     pub seller: Signer<'info>,
+    #[account(mut)]
+    pub seller_token: Account<'info, token::TokenAccount>,
     #[account(mut)]
     pub mint: Account<'info, token::Mint>,
     #[account(mut)]
@@ -64,15 +71,16 @@ pub struct CreateEnglishAuctionListingPda<'info> {
 pub struct EnglishAuctionListingData {
     pub mint: Pubkey,
     pub seller: Pubkey,
-    pub seller_token: Option<Pubkey>,
-    pub highest_bidder: Option<Pubkey>,
-    pub highest_bidder_token: Option<Pubkey>,
-    pub highest_bid_lamports: Option<u64>,
+    pub is_active: bool,
+    pub seller_token: Pubkey,
     pub starting_price_lamports: u64,
     pub start_date: Option<u64>,
     pub end_date: Option<u64>,
     pub close_date: Option<u64>,
+    pub highest_bidder: Option<Pubkey>,
+    pub highest_bidder_token: Option<Pubkey>,
+    pub highest_bid_pda: Option<Pubkey>,
+    pub highest_bid_lamports: Option<u64>,
     pub sold: Option<bool>,
-    pub is_active: bool,
     pub fund_withdrawn: Option<bool>,
 }

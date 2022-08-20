@@ -1,8 +1,8 @@
 use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
-    error::ErrorCode,
-    utils::{create_fixed_price_listing_pda::*, create_nft_listing_pda::*},
+    error::ErrorCode, processor::fixed_price_listing::utils::create_fixed_price_listing_pda::*,
+    utils::create_nft_listing_pda::*,
 };
 
 pub fn create_fixed_price_listing_fn(

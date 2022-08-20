@@ -5,7 +5,8 @@ use {
 
 use crate::{
     error::ErrorCode,
-    utils::{create_english_auction_listing_pda::*, create_nft_listing_pda::*},
+    processor::english_auction_listing::utils::create_english_auction_listing_pda::*,
+    utils::create_nft_listing_pda::*,
 };
 pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>) -> Result<()> {
     msg!("Closing The English Auction Listing...");
