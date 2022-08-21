@@ -110,14 +110,17 @@ pub fn bid_english_auction_fn(
         return Err(ErrorCode::InvalidTokenAccount.into());
     }
 
-    let bid_account_lamports_end = **ctx.accounts.bid_account_vault.lamports.borrow();
+    let mut bid_account_lamports: u64 = bid_price_lamports;
+    if bid_account.bid_price_lamports.is_some() {
+        bid_account_lamports = bid_account.bid_price_lamports.unwrap() + bid_price_lamports;
+    }
     bid_account.bidder_token = bidder_token_account.key();
-    bid_account.bid_price_lamports = Some(bid_account_lamports_end);
+    bid_account.bid_price_lamports = Some(bid_account_lamports);
     bid_account.bid_date = Some(clock);
     bid_account.fund_deposit = Some(true);
 
     auction_account.highest_bid_pda = Some(ctx.accounts.bid_account.key().clone());
-    auction_account.highest_bid_lamports = Some(bid_account_lamports_end);
+    auction_account.highest_bid_lamports = Some(bid_account_lamports);
     auction_account.highest_bidder = Some(ctx.accounts.bidder.key());
     auction_account.highest_bidder_token = Some(bidder_token_account.key());
 

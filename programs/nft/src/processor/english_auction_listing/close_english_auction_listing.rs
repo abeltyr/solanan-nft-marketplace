@@ -48,7 +48,7 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
     // // close the fixed price listing pda
     listing_account.close_date = Some(Clock::get().unwrap().unix_timestamp as u64);
     listing_account.is_active = false;
-    // listing_account.sold = Some(false);
+    listing_account.sold = Some(false);
 
     Ok(())
 }

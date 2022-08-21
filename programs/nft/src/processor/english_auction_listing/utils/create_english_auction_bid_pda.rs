@@ -64,11 +64,9 @@ pub struct EnglishAuctionListingBidData {
     pub auction_account: Pubkey,
     pub bidder: Pubkey,
     pub bidder_token: Pubkey,
-    // remove this since the lamport of the account tells the deposite amount
     pub bid_price_lamports: Option<u64>,
     // same no need for the date
     pub bid_date: Option<u64>,
-    // remove this since we can check the lamports to see if it was deposited
     pub fund_deposit: Option<bool>,
     pub fund_withdrawn: Option<bool>,
 }

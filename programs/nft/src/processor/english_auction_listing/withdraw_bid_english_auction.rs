@@ -1,7 +1,4 @@
-use {
-    anchor_lang::{prelude::*, system_program},
-    anchor_spl::{associated_token, token},
-};
+use anchor_lang::prelude::*;
 
 use crate::{
     error::ErrorCode,
@@ -10,110 +7,80 @@ use crate::{
     },
 };
 
-pub fn bid_english_auction_fn(
-    ctx: Context<BidEnglishAuction>,
-    bid_price_lamports: u64,
-) -> Result<()> {
-    msg!("Start the English Auction listing Process");
+pub fn withdraw_bid_english_auction_fn(ctx: Context<WithdrawBidEnglishAuction>) -> Result<()> {
+    msg!("Withdraw the bid Process");
 
     let auction_account = &mut ctx.accounts.auction_account;
     let bid_account = &mut ctx.accounts.bid_account;
 
-    if !auction_account.is_active {
-        return Err(ErrorCode::NftNotListed.into());
+    let current_time = Clock::get().unwrap().unix_timestamp as u64;
+
+    // check if the auction is active
+    if auction_account.is_active {
+        return Err(ErrorCode::ActiveListing.into());
     }
 
-    // check if the auction is set properly
-    if auction_account.start_date.is_none()
-        || auction_account.end_date.is_none()
-        || auction_account.starting_price_lamports == 0
+    // check if the auction is closed by check if the closed date has passed
+    if auction_account.close_date.is_none()
+        || (auction_account.close_date.is_some()
+            && (auction_account.close_date.unwrap() == 0
+                || auction_account.close_date.unwrap() > current_time))
     {
-        return Err(ErrorCode::AuctionNotSet.into());
+        return Err(ErrorCode::ListingNotClosed.into());
     }
 
-    // check if the auction is not closed
-    if (auction_account.close_date.is_some() && auction_account.close_date > Some(0))
-        || auction_account.sold.is_some()
-        || auction_account.fund_withdrawn.is_some()
+    //validate the highest bidder withdrawal
+
+    // should all the lamports be extract and close the bid account at the same time
+
+    let bid_account_lamports = **ctx.accounts.bid_account_vault.lamports.borrow();
+
+    // check if the bid has lamports deposited
+    if bid_account.bid_price_lamports.is_none()
+        || bid_account.bid_price_lamports.is_some() && bid_account.bid_price_lamports.unwrap() == 0
     {
-        return Err(ErrorCode::ListingAlreadyClosed.into());
+        return Err(ErrorCode::NOLamports.into());
     }
 
-    let clock = Clock::get().unwrap().unix_timestamp as u64;
-
-    // check if the start date has passed
-    if auction_account.start_date.unwrap() <= clock {
-        return Err(ErrorCode::AuctionNotStarted.into());
-    }
-    // check if the end date has not passed
-    if auction_account.end_date.unwrap() > clock {
-        return Err(ErrorCode::AuctionEnded.into());
+    if auction_account.highest_bid_pda.is_none() {
+        return Err(ErrorCode::ListingNotClosed.into());
     }
 
-    // check if the bid is higher than starting price
-    if auction_account.starting_price_lamports <= bid_price_lamports {
-        return Err(ErrorCode::BidLowerThanStartingBid.into());
-    }
-
-    // check if the bid is higher than previous bid
-    if auction_account.highest_bid_lamports.is_some()
-        && auction_account.highest_bid_lamports.unwrap() > 0
-        && auction_account.highest_bid_lamports.unwrap() < bid_price_lamports
+    if auction_account.seller != ctx.accounts.withdrawer.key()
+        && bid_account.bidder != ctx.accounts.withdrawer.key()
     {
-        return Err(ErrorCode::BidLowerThanHighestBider.into());
+        return Err(ErrorCode::UnAuthorizedWithdrawal.into());
     }
 
-    // validate so that the seller can distribute
+    if auction_account.seller != ctx.accounts.withdrawer.key()
+        && auction_account.highest_bid_pda.unwrap() == ctx.accounts.bid_account_vault.key()
+    {
+        return Err(ErrorCode::HighestBidderWithDrawIssue.into());
+    }
+    if auction_account.seller == ctx.accounts.withdrawer.key()
+        && auction_account.highest_bid_pda.unwrap() != ctx.accounts.bid_account_vault.key()
+    {
+        return Err(ErrorCode::BidAccountIssue.into());
+    }
 
-    msg!("mint :{:?}", ctx.accounts.mint);
-
-    // validate if the token is still under the owner by the token account
-
-    // transfer the fund
-    system_program::transfer(
-        CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
-            system_program::Transfer {
-                from: ctx.accounts.bidder.to_account_info(),
-                to: ctx.accounts.bid_account_vault.to_account_info(),
-            },
-        ),
-        bid_price_lamports,
-    )?;
-
-    // fetch token account of the seller
-    let bidder_token_account = associated_token::get_associated_token_address(
-        &ctx.accounts.bidder.key(),
-        &ctx.accounts.mint.key(),
+    msg!(
+        "bid_price_lamports :{} bid_account_lamports :{}",
+        bid_account.bid_price_lamports.unwrap(),
+        bid_account_lamports
     );
+    **ctx.accounts.bid_account_vault.try_borrow_mut_lamports()? -=
+        bid_account.bid_price_lamports.unwrap();
+    **ctx.accounts.withdrawer.try_borrow_mut_lamports()? += bid_account.bid_price_lamports.unwrap();
 
-    if bidder_token_account.key() != ctx.accounts.bidder_token_account.key() {
-        return Err(ErrorCode::InvalidTokenAccount.into());
-    }
-
-    bid_account.bidder_token = bidder_token_account.key();
-    bid_account.bid_price_lamports = Some(bid_price_lamports);
-    bid_account.bid_date = Some(clock);
-    bid_account.fund_deposit = Some(true);
-
-    auction_account.highest_bid_pda = Some(ctx.accounts.bid_account.key().clone());
-    auction_account.highest_bid_lamports = Some(bid_price_lamports);
-    auction_account.highest_bidder = Some(ctx.accounts.bidder.key());
-    auction_account.highest_bidder_token = Some(bidder_token_account.key());
+    // bid_account.withdrawn_by = some(ctx.accounts.withdrawer.key().clone());
 
     Ok(())
 }
 
 #[derive(Accounts)]
-pub struct BidEnglishAuction<'info> {
+pub struct WithdrawBidEnglishAuction<'info> {
     #[account(mut)]
-    pub mint: Account<'info, token::Mint>,
-    #[account(mut)]
-    pub bidder: Signer<'info>,
-    #[account(mut)]
-    pub bidder_token_account: Account<'info, token::TokenAccount>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, token::Token>,
+    pub withdrawer: Signer<'info>,
     #[account(mut)]
     pub auction_account: Account<'info, EnglishAuctionListingData>,
     #[account(mut)]
@@ -121,4 +88,5 @@ pub struct BidEnglishAuction<'info> {
     #[account(mut)]
     /// CHECK:
     pub bid_account_vault: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
 }

@@ -13,6 +13,7 @@ use crate::{
             close_english_auction_listing::*,
             create_english_auction_listing::*,
             utils::{create_english_auction_bid_pda::*, create_english_auction_listing_pda::*},
+            withdraw_bid_english_auction::*,
         },
         fixed_price_listing::{
             buy_nft_fixed_price_listing::*, close_fixed_price_listing::*,
@@ -84,5 +85,9 @@ pub mod listings {
         bid_price_lamports: u64,
     ) -> Result<()> {
         bid_english_auction_fn(ctx, bid_price_lamports)
+    }
+
+    pub fn withdraw_bid_english_auction(ctx: Context<WithdrawBidEnglishAuction>) -> Result<()> {
+        withdraw_bid_english_auction_fn(ctx)
     }
 }

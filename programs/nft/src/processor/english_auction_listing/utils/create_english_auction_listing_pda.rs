@@ -54,7 +54,7 @@ pub struct CreateEnglishAuctionListingPda<'info> {
     #[account(
         init,
         payer = seller,
-        space = 250,
+        space = 275,
         seeds = [
             nft_listing_account.key().as_ref(),
             b"_English_Auction_",

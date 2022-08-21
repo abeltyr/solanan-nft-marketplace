@@ -58,7 +58,25 @@ pub enum ErrorCode {
     // 5017
     #[msg("Auction has not been set yet")]
     AuctionNotSet,
-    // 5017
+    // 5018
     #[msg("The seller can't be bid")]
     SellerBidIssue,
+    // 5019
+    #[msg("The listing is not closed")]
+    ListingNotClosed,
+    // 5020
+    #[msg("The listing is still active")]
+    ActiveListing,
+    // 5021
+    #[msg("The account doesn't have lamports to withdraw")]
+    NOLamports,
+    // 5021
+    #[msg("The highest bidder can't withdraw fund")]
+    HighestBidderWithDrawIssue,
+    // 5022
+    #[msg("The bid provided is an invalid one")]
+    BidAccountIssue,
+    // 5022
+    #[msg("The Withdrawer doesn't have access ")]
+    UnAuthorizedWithdrawal,
 }

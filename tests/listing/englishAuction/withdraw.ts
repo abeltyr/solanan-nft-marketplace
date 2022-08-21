@@ -13,6 +13,7 @@ describe("english auction", () => {
 
   let payer: anchor.web3.Keypair;
   let buyer: anchor.web3.Keypair;
+  let buyer1: anchor.web3.Keypair;
   let mint: anchor.web3.PublicKey;
   let connection: anchor.web3.Connection;
   let ownerTokenAddress: anchor.web3.PublicKey;
@@ -31,6 +32,10 @@ describe("english auction", () => {
     let accountKey = require("../../keypairs/second.json");
     const secretKey = Uint8Array.from(accountKey);
     buyer = anchor.web3.Keypair.fromSecretKey(secretKey);
+
+    let accountK1ey = require("../../keypairs/first.json");
+    const secret1Key = Uint8Array.from(accountK1ey);
+    buyer1 = anchor.web3.Keypair.fromSecretKey(secret1Key);
 
     let programAccountKey = require("../../../target/deploy/listings-keypair.json");
     const programSecretKey = Uint8Array.from(programAccountKey);
@@ -103,56 +108,48 @@ describe("english auction", () => {
   });
   it("check buyer balance", async () => {
     console.log(
-      "check For Listing --------------------------------------------------------------------",
+      "check For bid --------------------------------------------------------------------",
     );
 
     const data = await connection.getAccountInfo(bidPda);
     console.log("data", data);
-    const buyerData = await connection.getAccountInfo(buyer.publicKey);
-    console.log("buyerData", buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
+    const payerData = await connection.getAccountInfo(payer.publicKey);
+    console.log("payerData", payerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
   });
-  it("bid ", async () => {
+  it("withdraw ", async () => {
     try {
       console.log(
-        "Bid For Listing --------------------------------------------------------------------",
+        "withdraw fund fom bid --------------------------------------------------------------------",
       );
-
-      const saleAmount = 0.015 * anchor.web3.LAMPORTS_PER_SOL;
 
       let transaction = await program.methods
-        .bidEnglishAuction(new anchor.BN(saleAmount))
+        .withdrawBidEnglishAuction()
         .accounts({
           auctionAccount: listingPda,
-          bidder: buyer.publicKey,
-          mint: mint,
           bidAccount: bidPda,
-          bidderTokenAccount: buyerTokenAddress,
+          withdrawer: payer.publicKey,
           bidAccountVault: bidPda,
-          sellerTokenAccount: ownerTokenAddress,
         })
-        .signers([buyer])
+        .signers([payer])
         .rpc();
       console.log("Your transaction signature", transaction);
-      const bidData = await program.account.englishAuctionListingBidData.fetch(
-        bidPda,
-      );
       const listingData = await program.account.englishAuctionListingData.fetch(
         listingPda,
       );
-
-      console.log({ bidData, listingData });
+      const nftData = await program.account.nftListingData.fetch(nftPda);
+      console.log({ listingData, nftData });
     } catch (e) {
       console.log("error", e);
     }
   });
   it("check buyer balance", async () => {
     console.log(
-      "check For Listing --------------------------------------------------------------------",
+      "check For bid --------------------------------------------------------------------",
     );
 
     const data = await connection.getAccountInfo(bidPda);
     console.log("data", data);
-    const buyerData = await connection.getAccountInfo(buyer.publicKey);
-    console.log("buyerData", buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
+    const payerData = await connection.getAccountInfo(payer.publicKey);
+    console.log("payerData", payerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
   });
 });
