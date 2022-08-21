@@ -18,9 +18,11 @@ describe("english auction", () => {
   let connection: anchor.web3.Connection;
   let ownerTokenAddress: anchor.web3.PublicKey;
   let buyerTokenAddress: anchor.web3.PublicKey;
+  let buyer1TokenAddress: anchor.web3.PublicKey;
   let nftPda;
   let listingPda;
   let bidPda;
+  let bidPda1;
   let programAccount: anchor.web3.Keypair;
   const program = anchor.workspace.Listings as Program<Listings>;
 
@@ -33,9 +35,9 @@ describe("english auction", () => {
     const secretKey = Uint8Array.from(accountKey);
     buyer = anchor.web3.Keypair.fromSecretKey(secretKey);
 
-    let accountK1ey = require("../../keypairs/first.json");
-    const secret1Key = Uint8Array.from(accountK1ey);
-    buyer1 = anchor.web3.Keypair.fromSecretKey(secret1Key);
+    let accountKey1 = require("../../keypairs/first.json");
+    const secretKey1 = Uint8Array.from(accountKey1);
+    buyer1 = anchor.web3.Keypair.fromSecretKey(secretKey1);
 
     let programAccountKey = require("../../../target/deploy/listings-keypair.json");
     const programSecretKey = Uint8Array.from(programAccountKey);
@@ -61,6 +63,13 @@ describe("english auction", () => {
       buyer.publicKey,
     );
     buyerTokenAddress = buyerTokenAccount.address;
+    const buyer1TokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      buyer1,
+      mint,
+      buyer1.publicKey,
+    );
+    buyer1TokenAddress = buyer1TokenAccount.address;
   });
   it("Create Nft Pda ", async () => {
     console.log(
@@ -105,6 +114,13 @@ describe("english auction", () => {
     );
 
     bidPda = bidListingPda[0];
+
+    let bidListingPda1 = await anchor.web3.PublicKey.findProgramAddress(
+      [listingPda.toBuffer(), buyer1.publicKey.toBuffer()],
+      program.programId,
+    );
+
+    bidPda1 = bidListingPda1[0];
   });
   it("check buyer balance", async () => {
     console.log(
@@ -126,11 +142,37 @@ describe("english auction", () => {
         .withdrawBidEnglishAuction()
         .accounts({
           auctionAccount: listingPda,
-          bidAccount: bidPda,
+          bidAccount: bidPda1,
           withdrawer: payer.publicKey,
-          bidAccountVault: bidPda,
+          bidAccountVault: bidPda1,
         })
         .signers([payer])
+        .rpc();
+      console.log("Your transaction signature", transaction);
+      const listingData = await program.account.englishAuctionListingData.fetch(
+        listingPda,
+      );
+      const nftData = await program.account.nftListingData.fetch(nftPda);
+      console.log({ listingData, nftData });
+    } catch (e) {
+      console.log("error", e);
+    }
+  });
+  it("withdraw ", async () => {
+    try {
+      console.log(
+        "withdraw fund fom bid --------------------------------------------------------------------",
+      );
+
+      let transaction = await program.methods
+        .withdrawBidEnglishAuction()
+        .accounts({
+          auctionAccount: listingPda,
+          bidAccount: bidPda,
+          withdrawer: buyer.publicKey,
+          bidAccountVault: bidPda,
+        })
+        .signers([buyer])
         .rpc();
       console.log("Your transaction signature", transaction);
       const listingData = await program.account.englishAuctionListingData.fetch(

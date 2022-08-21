@@ -51,18 +51,28 @@ pub fn bid_english_auction_fn(
         return Err(ErrorCode::AuctionEnded.into());
     }
 
-    let bid_account_lamports_start = **ctx.accounts.bid_account_vault.lamports.borrow();
+    let mut bid_account_lamports: u64 = bid_price_lamports;
+
+    if bid_account.bid_price_lamports.is_some() {
+        bid_account_lamports = bid_account.bid_price_lamports.unwrap() + bid_price_lamports;
+    }
 
     // check if the bid is higher than starting price
-    if auction_account.starting_price_lamports > bid_price_lamports + bid_account_lamports_start {
+    if auction_account.starting_price_lamports > bid_account_lamports {
         return Err(ErrorCode::BidLowerThanStartingBid.into());
     }
 
+    msg!(
+        "old bid {} new bid {}, status{}",
+        auction_account.highest_bid_lamports.unwrap(),
+        bid_account_lamports,
+        auction_account.highest_bid_lamports.is_some()
+            && auction_account.highest_bid_lamports.unwrap() >= bid_account_lamports
+    );
+
     // check if the bid is higher than previous bid
     if auction_account.highest_bid_lamports.is_some()
-        && auction_account.highest_bid_lamports.unwrap() > 0
-        && auction_account.highest_bid_lamports.unwrap()
-            > bid_price_lamports + bid_account_lamports_start
+        && auction_account.highest_bid_lamports.unwrap() >= bid_account_lamports
     {
         return Err(ErrorCode::BidLowerThanHighestBider.into());
     }
@@ -110,10 +120,6 @@ pub fn bid_english_auction_fn(
         return Err(ErrorCode::InvalidTokenAccount.into());
     }
 
-    let mut bid_account_lamports: u64 = bid_price_lamports;
-    if bid_account.bid_price_lamports.is_some() {
-        bid_account_lamports = bid_account.bid_price_lamports.unwrap() + bid_price_lamports;
-    }
     bid_account.bidder_token = bidder_token_account.key();
     bid_account.bid_price_lamports = Some(bid_account_lamports);
     bid_account.bid_date = Some(clock);

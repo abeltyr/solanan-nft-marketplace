@@ -33,6 +33,35 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
         return Err(ErrorCode::ListingAlreadyClosed.into());
     }
 
+    let mut sold = false;
+
+    if listing_account.highest_bid_pda.is_some() && listing_account.highest_bidder.is_some() {
+        let bidder_token_account = associated_token::get_associated_token_address(
+            &listing_account.highest_bidder.unwrap().key(),
+            &listing_account.mint.key(),
+        );
+        if bidder_token_account.key() != ctx.accounts.bidder_token_account.key()
+            || ctx.accounts.bidder_token_account.key()
+                != listing_account.highest_bidder_token.unwrap().key()
+        {
+            return Err(ErrorCode::InvalidTokenAccount.into());
+        }
+
+        token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                token::Transfer {
+                    from: ctx.accounts.owner_token_account.to_account_info(),
+                    to: ctx.accounts.bidder_token_account.to_account_info(),
+                    authority: ctx.accounts.program_account.to_account_info(),
+                },
+            ),
+            1,
+        )?;
+
+        sold = true;
+    }
+
     // revoke program nft id
     token::revoke(CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
@@ -48,7 +77,7 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
     // // close the fixed price listing pda
     listing_account.close_date = Some(Clock::get().unwrap().unix_timestamp as u64);
     listing_account.is_active = false;
-    listing_account.sold = Some(false);
+    listing_account.sold = Some(sold);
 
     Ok(())
 }
@@ -62,9 +91,13 @@ pub struct CloseEnglishAuctionListing<'info> {
     #[account(mut)]
     pub owner_token_account: Account<'info, token::TokenAccount>,
     #[account(mut)]
+    pub bidder_token_account: Account<'info, token::TokenAccount>,
+    #[account(mut)]
     pub nft_listing_account: Account<'info, NftListingData>,
     #[account(mut)]
     pub listing_account: Account<'info, EnglishAuctionListingData>,
+    #[account()]
+    pub program_account: Signer<'info>,
     pub token_program: Program<'info, token::Token>,
     pub system_program: Program<'info, System>,
 }

@@ -110,6 +110,9 @@ describe("english auction", () => {
         nftListingAccount: nftPda,
         listingAccount: listingPda,
       });
+      let listingData = await program.account.englishAuctionListingData.fetch(
+        listingPda,
+      );
 
       let transaction = await program.methods
         .closeEnglishAuctionListing()
@@ -119,11 +122,14 @@ describe("english auction", () => {
           mint: mint,
           owner: payer.publicKey,
           ownerTokenAccount: ownerTokenAddress,
+          programAccount: programAccount.publicKey,
+          bidderTokenAccount: listingData.highestBidderToken,
         })
-        .signers([payer])
+        .signers([payer, programAccount])
         .rpc();
+
       console.log("Your transaction signature", transaction);
-      const listingData = await program.account.englishAuctionListingData.fetch(
+      listingData = await program.account.englishAuctionListingData.fetch(
         listingPda,
       );
       const nftData = await program.account.nftListingData.fetch(nftPda);
