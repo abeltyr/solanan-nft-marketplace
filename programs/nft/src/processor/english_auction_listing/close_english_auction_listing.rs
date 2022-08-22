@@ -11,6 +11,8 @@ use crate::{
 pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>) -> Result<()> {
     msg!("Closing The English Auction Listing...");
 
+    let nft_listing = &ctx.accounts.nft_listing_account.to_account_info();
+
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
     let listing_account = &mut ctx.accounts.listing_account;
 
@@ -46,15 +48,25 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
         {
             return Err(ErrorCode::InvalidTokenAccount.into());
         }
+        let (_pubkey_mint, bump_seed) = Pubkey::find_program_address(
+            &[ctx.accounts.mint.key().as_ref(), b"_state"],
+            ctx.program_id,
+        );
+        msg!(
+            "_pubkey_mint {} nft_listing {:?}",
+            _pubkey_mint,
+            nft_listing,
+        );
 
         token::transfer(
-            CpiContext::new(
+            CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 token::Transfer {
                     from: ctx.accounts.owner_token_account.to_account_info(),
                     to: ctx.accounts.bidder_token_account.to_account_info(),
-                    authority: ctx.accounts.program_account.to_account_info(),
+                    authority: nft_listing.to_account_info(),
                 },
+                &[&[ctx.accounts.mint.key().as_ref(), b"_state", &[bump_seed]]],
             ),
             1,
         )?;
@@ -73,6 +85,7 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
 
     // update the nft listing pda
     nft_listing_account.active = false;
+    nft_listing_account.listing = None;
 
     // // close the fixed price listing pda
     listing_account.close_date = Some(Clock::get().unwrap().unix_timestamp as u64);
@@ -96,8 +109,6 @@ pub struct CloseEnglishAuctionListing<'info> {
     pub nft_listing_account: Account<'info, NftListingData>,
     #[account(mut)]
     pub listing_account: Account<'info, EnglishAuctionListingData>,
-    #[account()]
-    pub program_account: Signer<'info>,
     pub token_program: Program<'info, token::Token>,
     pub system_program: Program<'info, System>,
 }

@@ -16,7 +16,10 @@ pub fn create_english_auction_listing_fn(
 
     // Fetch the nft listing account data and validate the nft status (check if nft is already is listed or not)
 
+    let nft_listing = &ctx.accounts.nft_listing_account.to_account_info();
+
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
+
     let listing_account = &mut ctx.accounts.listing_account;
 
     if nft_listing_account.active || listing_account.is_active {
@@ -46,13 +49,17 @@ pub fn create_english_auction_listing_fn(
         return Err(ErrorCode::DataIssue.into());
     }
 
+    if ctx.accounts.owner_token_account.amount != 1 {
+        return Err(ErrorCode::MintTokenIssue.into());
+    }
+
     // approve the nft
     token::approve(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             token::Approve {
                 authority: ctx.accounts.owner.to_account_info(),
-                delegate: ctx.accounts.program_account.to_account_info(),
+                delegate: nft_listing.to_account_info(),
                 to: ctx.accounts.owner_token_account.to_account_info(),
             },
         ),
@@ -71,6 +78,7 @@ pub fn create_english_auction_listing_fn(
 
     nft_listing_account.amount = nft_listing_account.amount + 1;
     nft_listing_account.active = true;
+    nft_listing_account.listing = Some("English Auction".to_string());
     Ok(())
 }
 
@@ -84,8 +92,6 @@ pub struct CreateEnglishAuctionListing<'info> {
     pub nft_listing_account: Account<'info, NftListingData>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, token::Token>,
-    #[account()]
-    pub program_account: Signer<'info>,
     #[account(mut)]
     pub listing_account: Account<'info, EnglishAuctionListingData>,
 }

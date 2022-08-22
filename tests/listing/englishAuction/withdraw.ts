@@ -46,7 +46,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "xH36fd7YokUVCCiYL2xnHzmz6uaQXnbETETt8tbxcpU",
+      "4SXRopstntQJUz4xj9jRLqNp5y1NjPDw34dyc9TcumUx",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -142,9 +142,9 @@ describe("english auction", () => {
         .withdrawBidEnglishAuction()
         .accounts({
           auctionAccount: listingPda,
-          bidAccount: bidPda1,
+          bidAccount: bidPda,
           withdrawer: payer.publicKey,
-          bidAccountVault: bidPda1,
+          bidAccountVault: bidPda,
         })
         .signers([payer])
         .rpc();
@@ -169,10 +169,10 @@ describe("english auction", () => {
         .accounts({
           auctionAccount: listingPda,
           bidAccount: bidPda,
-          withdrawer: buyer.publicKey,
+          withdrawer: buyer1.publicKey,
           bidAccountVault: bidPda,
         })
-        .signers([buyer])
+        .signers([buyer1])
         .rpc();
       console.log("Your transaction signature", transaction);
       const listingData = await program.account.englishAuctionListingData.fetch(

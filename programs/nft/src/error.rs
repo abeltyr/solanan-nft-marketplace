@@ -76,7 +76,10 @@ pub enum ErrorCode {
     // 5022
     #[msg("The bid provided is an invalid one")]
     BidAccountIssue,
-    // 5022
-    #[msg("The Withdrawer doesn't have access ")]
+    // 5023
+    #[msg("The Withdrawer doesn't have access")]
     UnAuthorizedWithdrawal,
+    // 5024
+    #[msg("The Given Token is not the owner of the nft")]
+    MintTokenIssue,
 }

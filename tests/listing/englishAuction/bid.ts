@@ -46,7 +46,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "xH36fd7YokUVCCiYL2xnHzmz6uaQXnbETETt8tbxcpU",
+      "4SXRopstntQJUz4xj9jRLqNp5y1NjPDw34dyc9TcumUx",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -129,12 +129,12 @@ describe("english auction", () => {
 
     const data = await connection.getAccountInfo(bidPda);
 
-    const data1 = await connection.getAccountInfo(bidPda);
+    const data1 = await connection.getAccountInfo(bidPda1);
     console.log("data", data);
     console.log("data1", data1);
     const buyerData = await connection.getAccountInfo(buyer.publicKey);
     console.log("buyerData", buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
-    const buyerData1 = await connection.getAccountInfo(buyer.publicKey);
+    const buyerData1 = await connection.getAccountInfo(buyer1.publicKey);
     console.log(
       "buyerData1",
       buyerData1.lamports / anchor.web3.LAMPORTS_PER_SOL,
@@ -153,10 +153,10 @@ describe("english auction", () => {
         .accounts({
           auctionAccount: listingPda,
           bidder: buyer.publicKey,
-          mint: mint,
           bidAccount: bidPda,
-          bidderTokenAccount: buyerTokenAddress,
           bidAccountVault: bidPda,
+          bidderTokenAccount: buyerTokenAddress,
+          nftListingAccount: nftPda,
           sellerTokenAccount: ownerTokenAddress,
         })
         .signers([buyer])
@@ -174,7 +174,7 @@ describe("english auction", () => {
       console.log("error", e);
     }
   });
-  it("bid 2", async () => {
+  it.skip("bid 2", async () => {
     try {
       console.log(
         "Bid 2For Listing --------------------------------------------------------------------",
@@ -192,17 +192,17 @@ describe("english auction", () => {
       //   .rpc();
       // console.log("Your bidpda signature", transactions);
 
-      const saleAmount = 0.0151 * anchor.web3.LAMPORTS_PER_SOL;
+      const saleAmount = 0.015 * anchor.web3.LAMPORTS_PER_SOL;
 
       let transaction = await program.methods
         .bidEnglishAuction(new anchor.BN(saleAmount))
         .accounts({
           auctionAccount: listingPda,
           bidder: buyer1.publicKey,
-          mint: mint,
           bidAccount: bidPda1,
-          bidderTokenAccount: buyer1TokenAddress,
           bidAccountVault: bidPda1,
+          bidderTokenAccount: buyer1TokenAddress,
+          nftListingAccount: nftPda,
           sellerTokenAccount: ownerTokenAddress,
         })
         .signers([buyer1])
@@ -227,12 +227,12 @@ describe("english auction", () => {
 
     const data = await connection.getAccountInfo(bidPda);
 
-    const data1 = await connection.getAccountInfo(bidPda);
+    const data1 = await connection.getAccountInfo(bidPda1);
     console.log("data", data);
     console.log("data1", data1);
     const buyerData = await connection.getAccountInfo(buyer.publicKey);
     console.log("buyerData", buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
-    const buyerData1 = await connection.getAccountInfo(buyer.publicKey);
+    const buyerData1 = await connection.getAccountInfo(buyer1.publicKey);
     console.log(
       "buyerData1",
       buyerData1.lamports / anchor.web3.LAMPORTS_PER_SOL,

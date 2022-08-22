@@ -7,7 +7,7 @@ import {
 import { clusterApiUrl, Connection } from "@solana/web3.js";
 import { Listings } from "../../../target/types/listings";
 
-describe("english auction", () => {
+describe("listings", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
 
@@ -19,7 +19,6 @@ describe("english auction", () => {
   let buyerTokenAddress: anchor.web3.PublicKey;
   let nftPda;
   let listingPda;
-  let bidPda;
   let programAccount: anchor.web3.Keypair;
   const program = anchor.workspace.Listings as Program<Listings>;
 
@@ -68,6 +67,7 @@ describe("english auction", () => {
     );
 
     nftPda = findNftPda[0];
+    // create the nft listing
   });
   it("Create Listing Pda", async () => {
     console.log(
@@ -80,7 +80,7 @@ describe("english auction", () => {
     let listing = await anchor.web3.PublicKey.findProgramAddress(
       [
         nftPda.toBuffer(),
-        Buffer.from("_English_Auction_"),
+        Buffer.from("_Fixed_Price_"),
         Buffer.from(`${count}`),
       ],
       program.programId,
@@ -88,53 +88,60 @@ describe("english auction", () => {
 
     listingPda = listing[0];
   });
-
-  it("bid pda", async () => {
+  it("check buyer balance", async () => {
     console.log(
-      "Bid Pda For Listing --------------------------------------------------------------------",
+      "check For amount --------------------------------------------------------------------",
     );
 
-    let bidListingPda = await anchor.web3.PublicKey.findProgramAddress(
-      [listingPda.toBuffer(), buyer.publicKey.toBuffer()],
-      program.programId,
-    );
-
-    bidPda = bidListingPda[0];
+    const buyerData = await connection.getAccountInfo(buyer.publicKey);
+    console.log("buyerData", buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
+    const payerData = await connection.getAccountInfo(payer.publicKey);
+    console.log("payerData", payerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
   });
-  it("close ", async () => {
+  it("buy ", async () => {
     try {
       console.log(
-        "Close Nft Listing --------------------------------------------------------------------",
+        "Buy Nft From Listing --------------------------------------------------------------------",
       );
-      console.log({
-        nftListingAccount: nftPda,
-        listingAccount: listingPda,
-      });
-      let listingData = await program.account.englishAuctionListingData.fetch(
-        listingPda,
+
+      const buyerData = await connection.getAccountInfo(buyer.publicKey);
+      console.log(
+        "buyerData",
+        buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL,
       );
 
       let transaction = await program.methods
-        .closeEnglishAuctionListing()
+        .buyNftFixedPriceListing()
         .accounts({
           nftListingAccount: nftPda,
           listingAccount: listingPda,
           mint: mint,
-          owner: payer.publicKey,
-          ownerTokenAccount: ownerTokenAddress,
-          bidderTokenAccount: listingData.highestBidderToken,
+          buyer: buyer.publicKey,
+          seller: payer.publicKey,
+          buyerTokenAccount: buyerTokenAddress,
+          sellerTokenAccount: ownerTokenAddress,
         })
-        .signers([payer])
+        .signers([buyer])
         .rpc();
-
       console.log("Your transaction signature", transaction);
-      listingData = await program.account.englishAuctionListingData.fetch(
+      const listingData = await program.account.fixedPriceListingData.fetch(
         listingPda,
       );
       const nftData = await program.account.nftListingData.fetch(nftPda);
       console.log({ listingData, nftData });
     } catch (e) {
       console.log("error", e);
+      throw new Error(e);
     }
+  });
+  it("check buyer balance", async () => {
+    console.log(
+      "check For amount --------------------------------------------------------------------",
+    );
+
+    const buyerData = await connection.getAccountInfo(buyer.publicKey);
+    console.log("buyerData", buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
+    const payerData = await connection.getAccountInfo(payer.publicKey);
+    console.log("payerData", payerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
   });
 });

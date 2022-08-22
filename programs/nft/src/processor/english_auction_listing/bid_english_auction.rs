@@ -8,6 +8,7 @@ use crate::{
     processor::english_auction_listing::utils::{
         create_english_auction_bid_pda::*, create_english_auction_listing_pda::*,
     },
+    utils::create_nft_listing_pda::*,
 };
 
 pub fn bid_english_auction_fn(
@@ -15,6 +16,8 @@ pub fn bid_english_auction_fn(
     bid_price_lamports: u64,
 ) -> Result<()> {
     msg!("Start the English Auction listing Process");
+
+    let nft_listing = &ctx.accounts.nft_listing_account.to_account_info();
 
     let auction_account = &mut ctx.accounts.auction_account;
     let bid_account = &mut ctx.accounts.bid_account;
@@ -62,14 +65,6 @@ pub fn bid_english_auction_fn(
         return Err(ErrorCode::BidLowerThanStartingBid.into());
     }
 
-    msg!(
-        "old bid {} new bid {}, status{}",
-        auction_account.highest_bid_lamports.unwrap(),
-        bid_account_lamports,
-        auction_account.highest_bid_lamports.is_some()
-            && auction_account.highest_bid_lamports.unwrap() >= bid_account_lamports
-    );
-
     // check if the bid is higher than previous bid
     if auction_account.highest_bid_lamports.is_some()
         && auction_account.highest_bid_lamports.unwrap() >= bid_account_lamports
@@ -91,7 +86,7 @@ pub fn bid_english_auction_fn(
     // validate if the token is still under the owner by the token account
 
     if ctx.accounts.seller_token_account.delegate.is_none()
-        || ctx.accounts.seller_token_account.delegate.unwrap() != ctx.program_id.key()
+        || ctx.accounts.seller_token_account.delegate.unwrap() != nft_listing.key()
         || ctx.accounts.seller_token_account.delegated_amount != 100000000
         || ctx.accounts.seller_token_account.amount != 1
     {
@@ -113,7 +108,7 @@ pub fn bid_english_auction_fn(
     // fetch token account of the seller
     let bidder_token_account = associated_token::get_associated_token_address(
         &ctx.accounts.bidder.key(),
-        &ctx.accounts.mint.key(),
+        &auction_account.mint.clone(),
     );
 
     if bidder_token_account.key() != ctx.accounts.bidder_token_account.key() {
@@ -136,9 +131,9 @@ pub fn bid_english_auction_fn(
 #[derive(Accounts)]
 pub struct BidEnglishAuction<'info> {
     #[account(mut)]
-    pub mint: Account<'info, token::Mint>,
-    #[account(mut)]
     pub bidder: Signer<'info>,
+    #[account(mut)]
+    pub nft_listing_account: Account<'info, NftListingData>,
     #[account(mut)]
     pub bidder_token_account: Account<'info, token::TokenAccount>,
     #[account(mut)]

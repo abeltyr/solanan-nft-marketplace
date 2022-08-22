@@ -7,7 +7,7 @@ import {
 import { clusterApiUrl, Connection } from "@solana/web3.js";
 import { Listings } from "../../../target/types/listings";
 
-describe("english auction", () => {
+describe("listings", () => {
   // Configure the client to use the local cluster.
   anchor.setProvider(anchor.AnchorProvider.env());
 
@@ -19,7 +19,6 @@ describe("english auction", () => {
   let buyerTokenAddress: anchor.web3.PublicKey;
   let nftPda;
   let listingPda;
-  let bidPda;
   let programAccount: anchor.web3.Keypair;
   const program = anchor.workspace.Listings as Program<Listings>;
 
@@ -68,19 +67,20 @@ describe("english auction", () => {
     );
 
     nftPda = findNftPda[0];
+    // create the nft listing
   });
   it("Create Listing Pda", async () => {
     console.log(
       "Create Listing Pda --------------------------------------------------------------------",
     );
     const nftListingData = await program.account.nftListingData.fetch(nftPda);
-    let count = nftListingData.amount - 1;
+    let count = nftListingData.amount;
 
     console.log("nft listing count", count);
     let listing = await anchor.web3.PublicKey.findProgramAddress(
       [
         nftPda.toBuffer(),
-        Buffer.from("_English_Auction_"),
+        Buffer.from("_Fixed_Price_"),
         Buffer.from(`${count}`),
       ],
       program.programId,
@@ -88,53 +88,37 @@ describe("english auction", () => {
 
     listingPda = listing[0];
   });
-
-  it("bid pda", async () => {
+  it("Create Listing", async () => {
     console.log(
-      "Bid Pda For Listing --------------------------------------------------------------------",
+      "Create Listing --------------------------------------------------------------------",
     );
+    const startTime: number = new Date().getTime() / 1000 + 30000;
+    const endTime: number = new Date().getTime() / 1000 + 6000 * 6000 * 24;
 
-    let bidListingPda = await anchor.web3.PublicKey.findProgramAddress(
-      [listingPda.toBuffer(), buyer.publicKey.toBuffer()],
-      program.programId,
-    );
-
-    bidPda = bidListingPda[0];
-  });
-  it("close ", async () => {
+    const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
     try {
-      console.log(
-        "Close Nft Listing --------------------------------------------------------------------",
-      );
-      console.log({
-        nftListingAccount: nftPda,
-        listingAccount: listingPda,
-      });
-      let listingData = await program.account.englishAuctionListingData.fetch(
-        listingPda,
-      );
-
       let transaction = await program.methods
-        .closeEnglishAuctionListing()
+        .createFixedPriceListing(
+          new anchor.BN(startTime),
+          new anchor.BN(endTime),
+          new anchor.BN(saleAmount),
+        )
         .accounts({
-          nftListingAccount: nftPda,
-          listingAccount: listingPda,
-          mint: mint,
           owner: payer.publicKey,
+          nftListingAccount: nftPda,
           ownerTokenAccount: ownerTokenAddress,
-          bidderTokenAccount: listingData.highestBidderToken,
+          listingAccount: listingPda,
         })
         .signers([payer])
         .rpc();
-
       console.log("Your transaction signature", transaction);
-      listingData = await program.account.englishAuctionListingData.fetch(
+      const listingData = await program.account.fixedPriceListingData.fetch(
         listingPda,
       );
-      const nftData = await program.account.nftListingData.fetch(nftPda);
-      console.log({ listingData, nftData });
+      console.log("listingData", listingData);
     } catch (e) {
       console.log("error", e);
+      throw new Error(e);
     }
   });
 });

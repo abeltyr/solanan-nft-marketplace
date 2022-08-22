@@ -38,7 +38,7 @@ describe("listings", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "81TkuD4Z5mNyhysH93JuRWDuBmP6LWYY45KL4HBCQtRr",
+      "4SXRopstntQJUz4xj9jRLqNp5y1NjPDw34dyc9TcumUx",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -145,11 +145,10 @@ describe("listings", () => {
         .accounts({
           owner: payer.publicKey,
           nftListingAccount: nftPda,
-          programAccount: programAccount.publicKey,
           ownerTokenAccount: ownerTokenAddress,
           listingAccount: listingPda,
         })
-        .signers([payer, programAccount])
+        .signers([payer])
         .rpc();
       console.log("Your transaction signature", transaction);
       const listingData = await program.account.fixedPriceListingData.fetch(
@@ -183,9 +182,8 @@ describe("listings", () => {
           seller: payer.publicKey,
           buyerTokenAccount: buyerTokenAddress,
           sellerTokenAccount: ownerTokenAddress,
-          programAccount: programAccount.publicKey,
         })
-        .signers([buyer, programAccount])
+        .signers([buyer])
         .rpc();
       console.log("Your transaction signature", transaction);
       const listingData = await program.account.fixedPriceListingData.fetch(

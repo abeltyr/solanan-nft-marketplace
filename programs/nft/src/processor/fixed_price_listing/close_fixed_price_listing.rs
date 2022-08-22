@@ -36,6 +36,7 @@ pub fn close_fixed_price_listing_fn(ctx: Context<CloseFixedPriceListing>) -> Res
     // update the nft listing pda
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
     nft_listing_account.active = false;
+    nft_listing_account.listing = None;
 
     // close the fixed price listing pda
 

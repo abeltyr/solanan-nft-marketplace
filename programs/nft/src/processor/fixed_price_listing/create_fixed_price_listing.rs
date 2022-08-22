@@ -15,6 +15,8 @@ pub fn create_fixed_price_listing_fn(
 
     // Fetch the nft listing account data and validate the nft status (check if nft is already is listed or not)
 
+    let nft_listing = &ctx.accounts.nft_listing_account.to_account_info();
+
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
 
     msg!("nft_listing_account amount: {}", nft_listing_account.amount);
@@ -34,13 +36,17 @@ pub fn create_fixed_price_listing_fn(
         return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
     }
 
+    if ctx.accounts.owner_token_account.amount != 1 {
+        return Err(ErrorCode::MintTokenIssue.into());
+    }
+
     // approve the nft
     token::approve(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             token::Approve {
                 authority: ctx.accounts.owner.to_account_info(),
-                delegate: ctx.accounts.program_account.to_account_info(),
+                delegate: nft_listing.to_account_info(),
                 to: ctx.accounts.owner_token_account.to_account_info(),
             },
         ),
@@ -58,21 +64,20 @@ pub fn create_fixed_price_listing_fn(
 
     nft_listing_account.amount = nft_listing_account.amount + 1;
     nft_listing_account.active = true;
+    nft_listing_account.listing = Some("Fixed Price".to_string());
     Ok(())
 }
 
 #[derive(Accounts)]
 pub struct CreateFixedPriceListing<'info> {
     #[account(mut)]
-    pub owner: Signer<'info>,
-    #[account(mut)]
     pub owner_token_account: Account<'info, token::TokenAccount>,
     #[account(mut)]
     pub nft_listing_account: Account<'info, NftListingData>,
-    pub system_program: Program<'info, System>,
-    pub token_program: Program<'info, token::Token>,
-    #[account()]
-    pub program_account: Signer<'info>,
     #[account(mut)]
     pub listing_account: Account<'info, FixedPriceListingData>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, token::Token>,
 }

@@ -11,6 +11,8 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
     msg!("Buy The Nft...");
 
     // validate the nft and listing data
+    let nft_listing = &ctx.accounts.nft_listing_account.to_account_info();
+
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
     let listing_account = &mut ctx.accounts.listing_account;
     msg!(
@@ -77,7 +79,7 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
     }
 
     if ctx.accounts.seller_token_account.delegate.is_none()
-        || ctx.accounts.seller_token_account.delegate.unwrap() != ctx.accounts.program_account.key()
+        || ctx.accounts.seller_token_account.delegate.unwrap() != nft_listing.key()
         || ctx.accounts.seller_token_account.delegated_amount != 100000000
         || ctx.accounts.seller_token_account.amount != 1
     {
@@ -107,14 +109,20 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
 
     //--------------------------------------------------------//
     // transfer the NFT To buyer
+    let (_pubkey_mint, bump_seed) = Pubkey::find_program_address(
+        &[ctx.accounts.mint.key().as_ref(), b"_state"],
+        ctx.program_id,
+    );
+
     token::transfer(
-        CpiContext::new(
+        CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             token::Transfer {
                 from: ctx.accounts.seller_token_account.to_account_info(),
                 to: ctx.accounts.buyer_token_account.to_account_info(),
-                authority: ctx.accounts.program_account.to_account_info(),
+                authority: nft_listing.to_account_info(),
             },
+            &[&[ctx.accounts.mint.key().as_ref(), b"_state", &[bump_seed]]],
         ),
         1,
     )?;
@@ -122,6 +130,7 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
     //--------------------------------------------------------//
     // update the nft and listing pda
     nft_listing_account.active = false;
+    nft_listing_account.listing = None;
 
     listing_account.close_date = Some(Clock::get().unwrap().unix_timestamp as u64);
     listing_account.sold = Some(true);
@@ -144,8 +153,6 @@ pub struct BuyNftFixedPriceListing<'info> {
     pub seller: UncheckedAccount<'info>,
     #[account(mut)]
     pub seller_token_account: Account<'info, token::TokenAccount>,
-    #[account()]
-    pub program_account: Signer<'info>,
     #[account(mut)]
     pub buyer: Signer<'info>,
     #[account(mut)]
