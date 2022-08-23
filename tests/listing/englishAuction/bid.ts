@@ -46,7 +46,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "13V6SrSDP1FMUV8pjGUWHsPuKZVZNYNPvGL8v7LhHt4n",
+      "5EffzfBxNy1cr1jgyJeDnDpiViUsCp55MnP6KrjY4Kp9",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -146,18 +146,18 @@ describe("english auction", () => {
         "Bid For Listing --------------------------------------------------------------------",
       );
 
-      const saleAmount = 0.015 * anchor.web3.LAMPORTS_PER_SOL;
+      const saleAmount = 0.045 * anchor.web3.LAMPORTS_PER_SOL;
 
       let transaction = await program.methods
         .bidEnglishAuction(new anchor.BN(saleAmount))
         .accounts({
-          auctionAccount: listingPda,
+          listingAccount: listingPda,
           bidder: buyer.publicKey,
           bidAccount: bidPda,
           bidAccountVault: bidPda,
-          bidderTokenAccount: buyerTokenAddress,
+          bidderToken: buyerTokenAddress,
           nftListingAccount: nftPda,
-          sellerTokenAccount: ownerTokenAddress,
+          sellerToken: ownerTokenAddress,
         })
         .signers([buyer])
         .rpc();
@@ -180,30 +180,18 @@ describe("english auction", () => {
         "Bid 2For Listing --------------------------------------------------------------------",
       );
 
-      // let transactions = await program.methods
-      //   .createEnglishAuctionBidPda()
-      //   .accounts({
-      //     auctionAccount: listingPda,
-      //     bidder: buyer1.publicKey,
-      //     mint: mint,
-      //     bidAccount: bidPda1,
-      //   })
-      //   .signers([buyer1])
-      //   .rpc();
-      // console.log("Your bidpda signature", transactions);
-
-      const saleAmount = 0.015 * anchor.web3.LAMPORTS_PER_SOL;
+      const saleAmount = 0.0451 * anchor.web3.LAMPORTS_PER_SOL;
 
       let transaction = await program.methods
         .bidEnglishAuction(new anchor.BN(saleAmount))
         .accounts({
-          auctionAccount: listingPda,
+          listingAccount: listingPda,
           bidder: buyer1.publicKey,
           bidAccount: bidPda1,
           bidAccountVault: bidPda1,
-          bidderTokenAccount: buyer1TokenAddress,
+          bidderToken: buyer1TokenAddress,
           nftListingAccount: nftPda,
-          sellerTokenAccount: ownerTokenAddress,
+          sellerToken: ownerTokenAddress,
         })
         .signers([buyer1])
         .rpc();

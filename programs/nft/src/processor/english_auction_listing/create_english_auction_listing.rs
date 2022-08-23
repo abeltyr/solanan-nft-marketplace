@@ -22,8 +22,23 @@ pub fn create_english_auction_listing_fn(
 
     let listing_account = &mut ctx.accounts.listing_account;
 
+    let (_pubkey_mint, _) = Pubkey::find_program_address(
+        &[listing_account.mint.key().as_ref(), b"_nft_listing_data"],
+        ctx.program_id,
+    );
+
+    //check if the given nft listing data is the same
+    if _pubkey_mint != nft_listing_account.key() {
+        return Err(ErrorCode::NftListingInvalidData.into());
+    }
+
     if nft_listing_account.active || listing_account.is_active {
         return Err(ErrorCode::NftAlreadyListed.into());
+    }
+
+    // check if the given seller is the same as the one creating the listing pda
+    if listing_account.seller != ctx.accounts.seller.key() {
+        return Err(ErrorCode::SellerInvalidData.into());
     }
 
     // start_date cannot be in the past
@@ -37,20 +52,16 @@ pub fn create_english_auction_listing_fn(
     }
 
     //check if listing is closed
-    if listing_account.close_date > Some(0)
-        || listing_account.sold.is_some()
-        || listing_account.fund_withdrawn.is_some()
-    {
+    if listing_account.close_date > Some(0) || listing_account.sold.is_some() {
         return Err(ErrorCode::ListingAlreadyClosed.into());
     }
 
-    // check if the owner is also the pda creator
-    if ctx.accounts.owner.key() != listing_account.seller.key() {
-        return Err(ErrorCode::DataIssue.into());
+    if ctx.accounts.seller_token.amount != 1 {
+        return Err(ErrorCode::MintTokenIssue.into());
     }
 
-    if ctx.accounts.owner_token_account.amount != 1 {
-        return Err(ErrorCode::MintTokenIssue.into());
+    if starting_price_lamports <= 0 {
+        return Err(ErrorCode::PriceIssue.into());
     }
 
     // approve the nft
@@ -58,9 +69,9 @@ pub fn create_english_auction_listing_fn(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             token::Approve {
-                authority: ctx.accounts.owner.to_account_info(),
+                authority: ctx.accounts.seller.to_account_info(),
                 delegate: nft_listing.to_account_info(),
-                to: ctx.accounts.owner_token_account.to_account_info(),
+                to: ctx.accounts.seller_token.to_account_info(),
             },
         ),
         100000000,
@@ -85,9 +96,9 @@ pub fn create_english_auction_listing_fn(
 #[derive(Accounts)]
 pub struct CreateEnglishAuctionListing<'info> {
     #[account(mut)]
-    pub owner: Signer<'info>,
+    pub seller: Signer<'info>,
     #[account(mut)]
-    pub owner_token_account: Account<'info, token::TokenAccount>,
+    pub seller_token: Account<'info, token::TokenAccount>,
     #[account(mut)]
     pub nft_listing_account: Account<'info, NftListingData>,
     pub system_program: Program<'info, System>,

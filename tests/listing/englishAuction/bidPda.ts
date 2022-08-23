@@ -13,13 +13,16 @@ describe("english auction", () => {
 
   let payer: anchor.web3.Keypair;
   let buyer: anchor.web3.Keypair;
+  let buyer1: anchor.web3.Keypair;
   let mint: anchor.web3.PublicKey;
   let connection: anchor.web3.Connection;
   let ownerTokenAddress: anchor.web3.PublicKey;
   let buyerTokenAddress: anchor.web3.PublicKey;
+  let buyer1TokenAddress: anchor.web3.PublicKey;
   let nftPda;
   let listingPda;
   let bidPda;
+  let bidPda1;
   let programAccount: anchor.web3.Keypair;
   const program = anchor.workspace.Listings as Program<Listings>;
 
@@ -32,6 +35,10 @@ describe("english auction", () => {
     const secretKey = Uint8Array.from(accountKey);
     buyer = anchor.web3.Keypair.fromSecretKey(secretKey);
 
+    let accountKey1 = require("../../keypairs/first.json");
+    const secretKey1 = Uint8Array.from(accountKey1);
+    buyer1 = anchor.web3.Keypair.fromSecretKey(secretKey1);
+
     let programAccountKey = require("../../../target/deploy/listings-keypair.json");
     const programSecretKey = Uint8Array.from(programAccountKey);
     programAccount = anchor.web3.Keypair.fromSecretKey(programSecretKey);
@@ -39,7 +46,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "13V6SrSDP1FMUV8pjGUWHsPuKZVZNYNPvGL8v7LhHt4n",
+      "5EffzfBxNy1cr1jgyJeDnDpiViUsCp55MnP6KrjY4Kp9",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -56,6 +63,13 @@ describe("english auction", () => {
       buyer.publicKey,
     );
     buyerTokenAddress = buyerTokenAccount.address;
+    const buyer1TokenAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      buyer1,
+      mint,
+      buyer1.publicKey,
+    );
+    buyer1TokenAddress = buyer1TokenAccount.address;
   });
   it("Create Nft Pda ", async () => {
     console.log(
@@ -105,12 +119,33 @@ describe("english auction", () => {
 
       bidPda = bidListingPda[0];
 
+      let bidListingPda1 = await anchor.web3.PublicKey.findProgramAddress(
+        [listingPda.toBuffer(), buyer1.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      bidPda1 = bidListingPda1[0];
+
+      let transactions = await program.methods
+        .createEnglishAuctionBidPda()
+        .accounts({
+          listingAccount: listingPda,
+          bidder: buyer1.publicKey,
+          nftListingAccount: nftPda,
+          bidAccount: bidPda1,
+          sellerToken: ownerTokenAddress,
+        })
+        .signers([buyer1])
+        .rpc();
+      console.log("Your bidpda signature", transactions);
+
       let transaction = await program.methods
         .createEnglishAuctionBidPda()
         .accounts({
-          auctionAccount: listingPda,
+          sellerToken: ownerTokenAddress,
+          listingAccount: listingPda,
+          nftListingAccount: nftPda,
           bidder: buyer.publicKey,
-          mint: mint,
           bidAccount: bidPda,
         })
         .signers([buyer])

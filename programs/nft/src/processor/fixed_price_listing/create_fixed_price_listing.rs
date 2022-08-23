@@ -19,13 +19,23 @@ pub fn create_fixed_price_listing_fn(
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
     let listing_account = &mut ctx.accounts.listing_account;
 
-    if nft_listing_account.active {
+    let (_pubkey_mint, _) = Pubkey::find_program_address(
+        &[listing_account.mint.key().as_ref(), b"_nft_listing_data"],
+        ctx.program_id,
+    );
+
+    //check if the given nft listing data is the same
+    if _pubkey_mint != nft_listing_account.key() {
+        return Err(ErrorCode::NftListingInvalidData.into());
+    }
+
+    if nft_listing_account.active || listing_account.is_active {
         return Err(ErrorCode::NftAlreadyListed.into());
     }
 
     // check if the given seller is the same as the one creating the listing pda
     if listing_account.seller != ctx.accounts.seller.key() {
-        return Err(ErrorCode::InvalidData.into());
+        return Err(ErrorCode::SellerInvalidData.into());
     }
 
     // start_date cannot be in the past
@@ -36,6 +46,10 @@ pub fn create_fixed_price_listing_fn(
     // Check if the end_date is greater than the start_date
     if start_date > end_date {
         return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
+    }
+
+    if price_lamports <= 0 {
+        return Err(ErrorCode::PriceIssue.into());
     }
 
     if ctx.accounts.seller_token.amount != 1 {

@@ -91,4 +91,10 @@ pub enum ErrorCode {
     // 5027
     #[msg("The provided seller isn't valid")]
     SellerInvalidData,
+    // 5028
+    #[msg("The provided bidder isn't valid")]
+    BidderInvalidData,
+    // 5029
+    #[msg("The starting price must be higher than zero")]
+    PriceIssue,
 }

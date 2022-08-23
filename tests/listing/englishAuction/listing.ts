@@ -39,7 +39,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "13V6SrSDP1FMUV8pjGUWHsPuKZVZNYNPvGL8v7LhHt4n",
+      "5EffzfBxNy1cr1jgyJeDnDpiViUsCp55MnP6KrjY4Kp9",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -123,9 +123,9 @@ describe("english auction", () => {
           new anchor.BN(saleAmount),
         )
         .accounts({
-          owner: payer.publicKey,
+          seller: payer.publicKey,
           nftListingAccount: nftPda,
-          ownerTokenAccount: ownerTokenAddress,
+          sellerToken: ownerTokenAddress,
           listingAccount: listingPda,
         })
         .signers([payer])

@@ -19,7 +19,7 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
     let listing_account = &mut ctx.accounts.listing_account;
 
     // check is the nft listing is active
-    if !nft_listing_account.active {
+    if !nft_listing_account.active || !listing_account.is_active {
         return Err(ErrorCode::NftNotListed.into());
     }
 

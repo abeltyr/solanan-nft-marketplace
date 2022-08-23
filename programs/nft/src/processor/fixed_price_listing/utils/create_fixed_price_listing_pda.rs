@@ -16,7 +16,7 @@ pub fn create_fixed_price_listing_pda_fn(
 
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
 
-    // check if the nft is already listed before creating the PDA
+    // check if the nft is not already listed before creating the PDA
     if nft_listing_account.active {
         return Err(NftAlreadyListed.into());
     }

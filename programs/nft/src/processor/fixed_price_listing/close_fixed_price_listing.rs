@@ -21,6 +21,16 @@ pub fn close_fixed_price_listing_fn(ctx: Context<CloseFixedPriceListing>) -> Res
         return Err(ErrorCode::ListingAlreadyClosed.into());
     }
 
+    let (_pubkey_mint, _) = Pubkey::find_program_address(
+        &[listing_account.mint.key().as_ref(), b"_nft_listing_data"],
+        ctx.program_id,
+    );
+
+    //check if the given nft listing data is the same
+    if _pubkey_mint != nft_listing_account.key() {
+        return Err(ErrorCode::NftListingInvalidData.into());
+    }
+
     // fetch token account of the owner
     let seller_token = associated_token::get_associated_token_address(
         &listing_account.seller.key(),
