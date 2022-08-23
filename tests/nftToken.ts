@@ -25,7 +25,7 @@ describe("Mint the Nft", async () => {
   it("Setup An account", async () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
-    let accountKey = require("./keypairs/first.json");
+    let accountKey = require(process.env.ANCHOR_WALLET);
 
     const secretKey = Uint8Array.from(accountKey);
     payer = Keypair.fromSecretKey(secretKey);

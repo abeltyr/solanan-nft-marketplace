@@ -6,6 +6,7 @@ pub fn create_nft_listing_pda_fn(ctx: Context<CreateNftListingPda>) -> Result<()
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
     nft_listing_account.amount = 0;
     nft_listing_account.active = false;
+    nft_listing_account.mint = ctx.accounts.mint.key().clone();
 
     Ok(())
 }
@@ -22,7 +23,7 @@ pub struct CreateNftListingPda<'info> {
         space = 82,
         seeds = [
             mint.key().as_ref(),
-            b"_state",
+            b"_nft_listing_data",
         ],
         bump
     )]
@@ -35,4 +36,5 @@ pub struct NftListingData {
     pub amount: u32,
     pub active: bool,
     pub listing: Option<String>,
+    pub mint: Pubkey,
 }

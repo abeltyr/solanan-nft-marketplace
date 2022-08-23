@@ -82,4 +82,13 @@ pub enum ErrorCode {
     // 5024
     #[msg("The Given Token is not the owner of the nft")]
     MintTokenIssue,
+    // 5025
+    #[msg("Only the Seller can close the a listing ")]
+    ClosingIssue,
+    // 5026
+    #[msg("The provided nft listing isn't valid")]
+    NftListingInvalidData,
+    // 5027
+    #[msg("The provided seller isn't valid")]
+    SellerInvalidData,
 }

@@ -15,7 +15,7 @@ pub fn bid_english_auction_fn(
     ctx: Context<BidEnglishAuction>,
     bid_price_lamports: u64,
 ) -> Result<()> {
-    msg!("Start the English Auction listing Process");
+    msg!("Bidding process started");
 
     let nft_listing = &ctx.accounts.nft_listing_account.to_account_info();
 

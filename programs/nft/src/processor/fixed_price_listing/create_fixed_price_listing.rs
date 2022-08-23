@@ -14,16 +14,18 @@ pub fn create_fixed_price_listing_fn(
     msg!("Start the Fixed Price listing Process");
 
     // Fetch the nft listing account data and validate the nft status (check if nft is already is listed or not)
-
     let nft_listing = &ctx.accounts.nft_listing_account.to_account_info();
 
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
-
-    msg!("nft_listing_account amount: {}", nft_listing_account.amount);
-    msg!("nft_listing_account active: {}", nft_listing_account.active);
+    let listing_account = &mut ctx.accounts.listing_account;
 
     if nft_listing_account.active {
         return Err(ErrorCode::NftAlreadyListed.into());
+    }
+
+    // check if the given seller is the same as the one creating the listing pda
+    if listing_account.seller != ctx.accounts.seller.key() {
+        return Err(ErrorCode::InvalidData.into());
     }
 
     // start_date cannot be in the past
@@ -31,53 +33,52 @@ pub fn create_fixed_price_listing_fn(
         return Err(ErrorCode::StartDateIsInPast.into());
     }
 
-    // end_date should not be greater than start_date
+    // Check if the end_date is greater than the start_date
     if start_date > end_date {
         return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
     }
 
-    if ctx.accounts.owner_token_account.amount != 1 {
+    if ctx.accounts.seller_token.amount != 1 {
         return Err(ErrorCode::MintTokenIssue.into());
     }
 
-    // approve the nft
+    // delegate the nft to a new a PDA
     token::approve(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             token::Approve {
-                authority: ctx.accounts.owner.to_account_info(),
+                authority: ctx.accounts.seller.to_account_info(),
                 delegate: nft_listing.to_account_info(),
-                to: ctx.accounts.owner_token_account.to_account_info(),
+                to: ctx.accounts.seller_token.to_account_info(),
             },
         ),
         100000000,
     )?;
 
     // update the listing data
-    let listing_account = &mut ctx.accounts.listing_account;
     listing_account.price_lamports = price_lamports;
     listing_account.start_date = Some(start_date);
     listing_account.end_date = Some(end_date);
     listing_account.is_active = true;
 
-    // // update the nft listing data
-
+    // update the nft listing data
     nft_listing_account.amount = nft_listing_account.amount + 1;
     nft_listing_account.active = true;
     nft_listing_account.listing = Some("Fixed Price".to_string());
+
     Ok(())
 }
 
 #[derive(Accounts)]
 pub struct CreateFixedPriceListing<'info> {
     #[account(mut)]
-    pub owner_token_account: Account<'info, token::TokenAccount>,
-    #[account(mut)]
     pub nft_listing_account: Account<'info, NftListingData>,
     #[account(mut)]
     pub listing_account: Account<'info, FixedPriceListingData>,
     #[account(mut)]
-    pub owner: Signer<'info>,
+    pub seller: Signer<'info>,
+    #[account(mut)]
+    pub seller_token: Account<'info, token::TokenAccount>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, token::Token>,
 }

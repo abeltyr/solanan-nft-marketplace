@@ -3,7 +3,10 @@ use {
     anchor_spl::{associated_token, token},
 };
 
-use crate::{error::ErrorCode::NftAlreadyListed, utils::create_nft_listing_pda::*};
+use crate::{
+    error::ErrorCode::{MintTokenIssue, NftAlreadyListed},
+    utils::create_nft_listing_pda::*,
+};
 
 pub fn create_fixed_price_listing_pda_fn(
     ctx: Context<CreateFixedPriceListingPda>,
@@ -11,20 +14,27 @@ pub fn create_fixed_price_listing_pda_fn(
 ) -> Result<()> {
     msg!("Fixed Price nft Listing count:{}...", count);
 
-    if ctx.accounts.nft_listing_account.active {
+    let nft_listing_account = &mut ctx.accounts.nft_listing_account;
+
+    // check if the nft is already listed before creating the PDA
+    if nft_listing_account.active {
         return Err(NftAlreadyListed.into());
     }
 
     // fetch token account of the seller
     let seller_token = associated_token::get_associated_token_address(
         &ctx.accounts.seller.key(),
-        &ctx.accounts.mint.key(),
+        &nft_listing_account.mint.key(),
     );
 
-    // // update the listing data
+    if ctx.accounts.seller_token.amount != 1 {
+        return Err(MintTokenIssue.into());
+    }
+
+    // update the listing data
     let listing_account = &mut ctx.accounts.listing_account;
     listing_account.seller = ctx.accounts.seller.key();
-    listing_account.mint = ctx.accounts.mint.key();
+    listing_account.mint = nft_listing_account.mint;
     listing_account.seller_token = Some(seller_token.key());
     listing_account.price_lamports = 0;
     listing_account.start_date = Some(0);
@@ -36,12 +46,13 @@ pub fn create_fixed_price_listing_pda_fn(
 }
 
 #[derive(Accounts)]
+//check alternative
 #[instruction(count: String)]
 pub struct CreateFixedPriceListingPda<'info> {
     #[account(mut)]
     pub seller: Signer<'info>,
     #[account(mut)]
-    pub mint: Account<'info, token::Mint>,
+    pub seller_token: Account<'info, token::TokenAccount>,
     #[account(mut)]
     pub nft_listing_account: Account<'info, NftListingData>,
     #[account(

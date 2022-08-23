@@ -49,7 +49,7 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
             return Err(ErrorCode::InvalidTokenAccount.into());
         }
         let (_pubkey_mint, bump_seed) = Pubkey::find_program_address(
-            &[ctx.accounts.mint.key().as_ref(), b"_state"],
+            &[ctx.accounts.mint.key().as_ref(), b"_nft_listing_data"],
             ctx.program_id,
         );
         msg!(
@@ -66,7 +66,11 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
                     to: ctx.accounts.bidder_token_account.to_account_info(),
                     authority: nft_listing.to_account_info(),
                 },
-                &[&[ctx.accounts.mint.key().as_ref(), b"_state", &[bump_seed]]],
+                &[&[
+                    ctx.accounts.mint.key().as_ref(),
+                    b"_nft_listing_data",
+                    &[bump_seed],
+                ]],
             ),
             1,
         )?;
