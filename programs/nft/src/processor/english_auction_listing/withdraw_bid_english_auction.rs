@@ -10,30 +10,31 @@ use crate::{
 pub fn withdraw_bid_english_auction_fn(ctx: Context<WithdrawBidEnglishAuction>) -> Result<()> {
     msg!("Withdraw the bid Process");
 
-    let auction_account = &mut ctx.accounts.auction_account;
+    let listing_account = &mut ctx.accounts.listing_account;
     let bid_account = &mut ctx.accounts.bid_account;
 
-    let current_time = Clock::get().unwrap().unix_timestamp as u64;
+    //check if the bid_account_vault and bid_account don't match
+    if bid_account.key() != ctx.accounts.bid_account_vault.key() {
+        return Err(ErrorCode::DataIssue.into());
+    }
 
     // check if the auction is active
-    if auction_account.is_active {
+    if listing_account.is_active {
         return Err(ErrorCode::ActiveListing.into());
     }
 
+    let current_time = Clock::get().unwrap().unix_timestamp as u64;
+
     // check if the auction is closed by check if the closed date has passed
-    if auction_account.close_date.is_none()
-        || (auction_account.close_date.is_some()
-            && (auction_account.close_date.unwrap() == 0
-                || auction_account.close_date.unwrap() > current_time))
+    if listing_account.close_date.is_none()
+        || (listing_account.close_date.is_some()
+            && (listing_account.close_date.unwrap() == 0
+                || listing_account.close_date.unwrap() > current_time))
     {
         return Err(ErrorCode::ListingNotClosed.into());
     }
 
-    //validate the highest bidder withdrawal
-
-    // should all the lamports be extract and close the bid account at the same time
-
-    let bid_account_lamports = **ctx.accounts.bid_account_vault.lamports.borrow();
+    // TODO: decide on should all the lamports be extract and close the bid account at the same time
 
     // check if the bid has lamports deposited
     if bid_account.bid_price_lamports.is_none()
@@ -42,37 +43,35 @@ pub fn withdraw_bid_english_auction_fn(ctx: Context<WithdrawBidEnglishAuction>) 
         return Err(ErrorCode::NOLamports.into());
     }
 
-    if auction_account.highest_bid_pda.is_none() {
+    if listing_account.highest_bid_pda.is_none() {
         return Err(ErrorCode::ListingNotClosed.into());
     }
 
-    if auction_account.seller != ctx.accounts.withdrawer.key()
+    //validate the withdrawer has access
+    if listing_account.seller != ctx.accounts.withdrawer.key()
         && bid_account.bidder != ctx.accounts.withdrawer.key()
     {
         return Err(ErrorCode::UnAuthorizedWithdrawal.into());
     }
 
-    if auction_account.seller != ctx.accounts.withdrawer.key()
-        && auction_account.highest_bid_pda.unwrap() == ctx.accounts.bid_account_vault.key()
+    //validate the highest bidder  can't withdraw
+    if listing_account.seller != ctx.accounts.withdrawer.key()
+        && listing_account.highest_bid_pda.unwrap() == ctx.accounts.bid_account_vault.key()
     {
         return Err(ErrorCode::HighestBidderWithDrawIssue.into());
     }
-    if auction_account.seller == ctx.accounts.withdrawer.key()
-        && auction_account.highest_bid_pda.unwrap() != ctx.accounts.bid_account_vault.key()
+
+    if listing_account.seller == ctx.accounts.withdrawer.key()
+        && listing_account.highest_bid_pda.unwrap() != ctx.accounts.bid_account_vault.key()
     {
         return Err(ErrorCode::BidAccountIssue.into());
     }
 
-    msg!(
-        "bid_price_lamports :{} bid_account_lamports :{}",
-        bid_account.bid_price_lamports.unwrap(),
-        bid_account_lamports
-    );
     **ctx.accounts.bid_account_vault.try_borrow_mut_lamports()? -=
         bid_account.bid_price_lamports.unwrap();
     **ctx.accounts.withdrawer.try_borrow_mut_lamports()? += bid_account.bid_price_lamports.unwrap();
 
-    // bid_account.withdrawn_by = some(ctx.accounts.withdrawer.key().clone());
+    bid_account.withdrawn_by = Some(ctx.accounts.withdrawer.key().clone());
 
     Ok(())
 }
@@ -82,7 +81,7 @@ pub struct WithdrawBidEnglishAuction<'info> {
     #[account(mut)]
     pub withdrawer: Signer<'info>,
     #[account(mut)]
-    pub auction_account: Account<'info, EnglishAuctionListingData>,
+    pub listing_account: Account<'info, EnglishAuctionListingData>,
     #[account(mut)]
     pub bid_account: Account<'info, EnglishAuctionListingBidData>,
     #[account(mut)]

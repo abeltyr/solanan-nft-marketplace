@@ -46,7 +46,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "4SXRopstntQJUz4xj9jRLqNp5y1NjPDw34dyc9TcumUx",
+      "5EffzfBxNy1cr1jgyJeDnDpiViUsCp55MnP6KrjY4Kp9",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -77,7 +77,7 @@ describe("english auction", () => {
     );
 
     let findNftPda = await anchor.web3.PublicKey.findProgramAddress(
-      [mint.toBuffer(), Buffer.from("_state")],
+      [mint.toBuffer(), Buffer.from("_nft_listing_data")],
       program.programId,
     );
 
@@ -122,6 +122,7 @@ describe("english auction", () => {
 
     bidPda1 = bidListingPda1[0];
   });
+
   it("check buyer balance", async () => {
     console.log(
       "check For bid --------------------------------------------------------------------",
@@ -129,10 +130,23 @@ describe("english auction", () => {
 
     const data = await connection.getAccountInfo(bidPda);
     console.log("data", data);
+    const bidPdaData = await program.account.englishAuctionListingBidData.fetch(
+      bidPda,
+    );
+    const bidPdaData1 =
+      await program.account.englishAuctionListingBidData.fetch(bidPda1);
+    console.log({ bidPdaData, bidPdaData1 });
     const payerData = await connection.getAccountInfo(payer.publicKey);
     console.log("payerData", payerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
+    const buyerData = await connection.getAccountInfo(buyer.publicKey);
+    console.log("buyerData", buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
+    const buyer1Data = await connection.getAccountInfo(buyer1.publicKey);
+    console.log(
+      "buyer1Data",
+      buyer1Data.lamports / anchor.web3.LAMPORTS_PER_SOL,
+    );
   });
-  it("withdraw ", async () => {
+  it("seller withdraw ", async () => {
     try {
       console.log(
         "withdraw fund fom bid --------------------------------------------------------------------",
@@ -141,7 +155,7 @@ describe("english auction", () => {
       let transaction = await program.methods
         .withdrawBidEnglishAuction()
         .accounts({
-          auctionAccount: listingPda,
+          listingAccount: listingPda,
           bidAccount: bidPda,
           withdrawer: payer.publicKey,
           bidAccountVault: bidPda,
@@ -158,7 +172,7 @@ describe("english auction", () => {
       console.log("error", e);
     }
   });
-  it("withdraw ", async () => {
+  it("bidder withdraw ", async () => {
     try {
       console.log(
         "withdraw fund fom bid --------------------------------------------------------------------",
@@ -167,19 +181,14 @@ describe("english auction", () => {
       let transaction = await program.methods
         .withdrawBidEnglishAuction()
         .accounts({
-          auctionAccount: listingPda,
-          bidAccount: bidPda,
+          listingAccount: listingPda,
+          bidAccount: bidPda1,
           withdrawer: buyer1.publicKey,
-          bidAccountVault: bidPda,
+          bidAccountVault: bidPda1,
         })
         .signers([buyer1])
         .rpc();
       console.log("Your transaction signature", transaction);
-      const listingData = await program.account.englishAuctionListingData.fetch(
-        listingPda,
-      );
-      const nftData = await program.account.nftListingData.fetch(nftPda);
-      console.log({ listingData, nftData });
     } catch (e) {
       console.log("error", e);
     }
@@ -191,7 +200,20 @@ describe("english auction", () => {
 
     const data = await connection.getAccountInfo(bidPda);
     console.log("data", data);
+    const bidPdaData = await program.account.englishAuctionListingBidData.fetch(
+      bidPda,
+    );
+    const bidPdaData1 =
+      await program.account.englishAuctionListingBidData.fetch(bidPda1);
+    console.log({ bidPdaData, bidPdaData1 });
     const payerData = await connection.getAccountInfo(payer.publicKey);
     console.log("payerData", payerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
+    const buyerData = await connection.getAccountInfo(buyer.publicKey);
+    console.log("buyerData", buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
+    const buyer1Data = await connection.getAccountInfo(buyer1.publicKey);
+    console.log(
+      "buyer1Data",
+      buyer1Data.lamports / anchor.web3.LAMPORTS_PER_SOL,
+    );
   });
 });

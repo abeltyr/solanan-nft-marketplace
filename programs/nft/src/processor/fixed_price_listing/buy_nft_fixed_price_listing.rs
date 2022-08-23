@@ -10,34 +10,25 @@ use crate::{
 pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> Result<()> {
     msg!("Buy The Nft...");
 
-    // validate the nft and listing data
+    // get the account info of the nft listing as an immutable to use for the transfer authority
     let nft_listing = &ctx.accounts.nft_listing_account.to_account_info();
 
+    // get the nft listing as mutable to fetch and update the data
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
+
     let listing_account = &mut ctx.accounts.listing_account;
-    msg!(
-        "checking if nft_listing_account is not active: {}",
-        !nft_listing_account.active
-    );
-    if !nft_listing_account.active {
+
+    // check is the nft listing is active
+    if !nft_listing_account.active || !listing_account.is_active {
         return Err(ErrorCode::NftNotListed.into());
     }
 
-    msg!(
-        "checking listing_account price: {}",
-        listing_account.price_lamports == 0
-    );
+    // check is the listing has the price setup
     if listing_account.price_lamports == 0 {
         return Err(ErrorCode::ListingPriceNotSet.into());
     }
 
-    msg!(
-        "checking listing is closed: {}",
-        listing_account.close_date > Some(0)
-            || listing_account.sold.is_some()
-            || listing_account.fund_sent.is_some()
-    );
-
+    // check is the listing is not closed
     if listing_account.close_date > Some(0)
         || listing_account.sold.is_some()
         || listing_account.fund_sent.is_some()
@@ -45,13 +36,7 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
         return Err(ErrorCode::ListingAlreadyClosed.into());
     }
 
-    msg!(
-        "checking listing_account is not activated: {}",
-        listing_account.start_date == Some(0)
-            || listing_account.end_date == Some(0)
-            || !listing_account.is_active
-    );
-
+    // check is the listing is not closed
     if listing_account.start_date == Some(0)
         || listing_account.end_date == Some(0)
         || !listing_account.is_active
@@ -59,37 +44,46 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
         return Err(ErrorCode::ListingNotActivate.into());
     }
 
-    //--------------------------------------------------------//
+    //get the bump seed for the signed transaction
+    let (_pubkey_mint, bump_seed) = Pubkey::find_program_address(
+        &[listing_account.mint.key().as_ref(), b"_nft_listing_data"],
+        ctx.program_id,
+    );
+
+    //check if the given nft listing data is the same
+    if _pubkey_mint != nft_listing.key() {
+        return Err(ErrorCode::NftListingInvalidData.into());
+    }
+
+    // check if the given seller is the same as the one provided in the listing
+    if listing_account.seller != ctx.accounts.seller.key() {
+        return Err(ErrorCode::SellerInvalidData.into());
+    }
+
+    let seller_token = associated_token::get_associated_token_address(
+        &listing_account.seller.key(),
+        &listing_account.mint.key(),
+    );
+
+    let buyer_token = associated_token::get_associated_token_address(
+        &ctx.accounts.buyer.key(),
+        &listing_account.mint.key(),
+    );
 
     // check the given token address match and has the proper authority
-    let seller_token_account = associated_token::get_associated_token_address(
-        &listing_account.seller.key(),
-        &ctx.accounts.mint.key(),
-    );
-
-    let buyer_token_account = associated_token::get_associated_token_address(
-        &ctx.accounts.buyer.key(),
-        &ctx.accounts.mint.key(),
-    );
-
-    if seller_token_account.key() != ctx.accounts.seller_token_account.key()
-        || buyer_token_account.key() != ctx.accounts.buyer_token_account.key()
+    if seller_token.key() != ctx.accounts.seller_token.key()
+        || buyer_token.key() != ctx.accounts.buyer_token.key()
     {
         return Err(ErrorCode::InvalidTokenAccount.into());
     }
 
-    if ctx.accounts.seller_token_account.delegate.is_none()
-        || ctx.accounts.seller_token_account.delegate.unwrap() != nft_listing.key()
-        || ctx.accounts.seller_token_account.delegated_amount != 100000000
-        || ctx.accounts.seller_token_account.amount != 1
+    // check the given token address has access to the nft and that it has given delegation authority
+    if ctx.accounts.seller_token.delegate.is_none()
+        || ctx.accounts.seller_token.delegate.unwrap() != nft_listing.key()
+        || ctx.accounts.seller_token.delegated_amount != 100000000
+        || ctx.accounts.seller_token.amount != 1
     {
         return Err(ErrorCode::InvalidTokenAccountDelegation.into());
-    }
-
-    //--------------------------------------------------------//
-
-    if listing_account.seller != ctx.accounts.seller.key() {
-        return Err(ErrorCode::InvalidData.into());
     }
 
     // transfer the fund
@@ -104,46 +98,43 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
         listing_account.price_lamports,
     )?;
 
+    // update the listing data according to the fund transfer
     listing_account.fund_sent = Some(true);
     listing_account.buyer = Some(ctx.accounts.buyer.key());
 
-    //--------------------------------------------------------//
     // transfer the NFT To buyer
-    let (_pubkey_mint, bump_seed) = Pubkey::find_program_address(
-        &[ctx.accounts.mint.key().as_ref(), b"_state"],
-        ctx.program_id,
-    );
-
     token::transfer(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             token::Transfer {
-                from: ctx.accounts.seller_token_account.to_account_info(),
-                to: ctx.accounts.buyer_token_account.to_account_info(),
+                from: ctx.accounts.seller_token.to_account_info(),
+                to: ctx.accounts.buyer_token.to_account_info(),
                 authority: nft_listing.to_account_info(),
             },
-            &[&[ctx.accounts.mint.key().as_ref(), b"_state", &[bump_seed]]],
+            &[&[
+                listing_account.mint.key().as_ref(),
+                b"_nft_listing_data",
+                &[bump_seed],
+            ]],
         ),
         1,
     )?;
 
-    //--------------------------------------------------------//
-    // update the nft and listing pda
+    // close the nft listing
     nft_listing_account.active = false;
     nft_listing_account.listing = None;
 
+    // close the listing
     listing_account.close_date = Some(Clock::get().unwrap().unix_timestamp as u64);
     listing_account.sold = Some(true);
     listing_account.is_active = false;
-    listing_account.buyer_token = Some(buyer_token_account.key());
+    listing_account.buyer_token = Some(buyer_token.key());
 
     Ok(())
 }
 
 #[derive(Accounts)]
 pub struct BuyNftFixedPriceListing<'info> {
-    #[account(mut)]
-    pub mint: Account<'info, token::Mint>,
     #[account(mut)]
     pub nft_listing_account: Account<'info, NftListingData>,
     #[account(mut)]
@@ -152,11 +143,11 @@ pub struct BuyNftFixedPriceListing<'info> {
     /// CHECK:
     pub seller: UncheckedAccount<'info>,
     #[account(mut)]
-    pub seller_token_account: Account<'info, token::TokenAccount>,
+    pub seller_token: Account<'info, token::TokenAccount>,
     #[account(mut)]
     pub buyer: Signer<'info>,
     #[account(mut)]
-    pub buyer_token_account: Account<'info, token::TokenAccount>,
+    pub buyer_token: Account<'info, token::TokenAccount>,
     pub token_program: Program<'info, token::Token>,
     pub system_program: Program<'info, System>,
 }

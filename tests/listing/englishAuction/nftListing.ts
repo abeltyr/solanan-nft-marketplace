@@ -39,7 +39,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "4SXRopstntQJUz4xj9jRLqNp5y1NjPDw34dyc9TcumUx",
+      "5EffzfBxNy1cr1jgyJeDnDpiViUsCp55MnP6KrjY4Kp9",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -63,7 +63,7 @@ describe("english auction", () => {
     );
 
     let findNftPda = await anchor.web3.PublicKey.findProgramAddress(
-      [mint.toBuffer(), Buffer.from("_state")],
+      [mint.toBuffer(), Buffer.from("_nft_listing_data")],
       program.programId,
     );
 
