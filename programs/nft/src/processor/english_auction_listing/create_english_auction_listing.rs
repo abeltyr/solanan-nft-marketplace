@@ -1,17 +1,18 @@
 use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
-    error::ErrorCode, processor::fixed_price_listing::utils::create_fixed_price_listing_pda::*,
+    error::ErrorCode,
+    processor::english_auction_listing::utils::create_english_auction_listing_pda::*,
     utils::create_nft_listing_pda::*,
 };
 
-pub fn create_fixed_price_listing_fn(
-    ctx: Context<CreateFixedPriceListing>,
+pub fn create_english_auction_listing_fn(
+    ctx: Context<CreateEnglishAuctionListing>,
     start_date: u64,
     end_date: u64,
-    price_lamports: u64,
+    starting_price_lamports: u64,
 ) -> Result<()> {
-    msg!("Start the Fixed Price listing Process");
+    msg!("Start the English Auction listing Process");
 
     // Fetch the nft listing account data and validate the nft status (check if nft is already is listed or not)
 
@@ -19,10 +20,9 @@ pub fn create_fixed_price_listing_fn(
 
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
 
-    msg!("nft_listing_account amount: {}", nft_listing_account.amount);
-    msg!("nft_listing_account active: {}", nft_listing_account.active);
+    let listing_account = &mut ctx.accounts.listing_account;
 
-    if nft_listing_account.active {
+    if nft_listing_account.active || listing_account.is_active {
         return Err(ErrorCode::NftAlreadyListed.into());
     }
 
@@ -34,6 +34,19 @@ pub fn create_fixed_price_listing_fn(
     // end_date should not be greater than start_date
     if start_date > end_date {
         return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
+    }
+
+    //check if listing is closed
+    if listing_account.close_date > Some(0)
+        || listing_account.sold.is_some()
+        || listing_account.fund_withdrawn.is_some()
+    {
+        return Err(ErrorCode::ListingAlreadyClosed.into());
+    }
+
+    // check if the owner is also the pda creator
+    if ctx.accounts.owner.key() != listing_account.seller.key() {
+        return Err(ErrorCode::DataIssue.into());
     }
 
     if ctx.accounts.owner_token_account.amount != 1 {
@@ -54,30 +67,31 @@ pub fn create_fixed_price_listing_fn(
     )?;
 
     // update the listing data
-    let listing_account = &mut ctx.accounts.listing_account;
-    listing_account.price_lamports = price_lamports;
+    listing_account.starting_price_lamports = starting_price_lamports;
     listing_account.start_date = Some(start_date);
     listing_account.end_date = Some(end_date);
+    listing_account.close_date = Some(0);
+    listing_account.highest_bid_lamports = Some(0);
     listing_account.is_active = true;
 
-    // // update the nft listing data
+    // update the nft listing data
 
     nft_listing_account.amount = nft_listing_account.amount + 1;
     nft_listing_account.active = true;
-    nft_listing_account.listing = Some("Fixed Price".to_string());
+    nft_listing_account.listing = Some("English Auction".to_string());
     Ok(())
 }
 
 #[derive(Accounts)]
-pub struct CreateFixedPriceListing<'info> {
+pub struct CreateEnglishAuctionListing<'info> {
+    #[account(mut)]
+    pub owner: Signer<'info>,
     #[account(mut)]
     pub owner_token_account: Account<'info, token::TokenAccount>,
     #[account(mut)]
     pub nft_listing_account: Account<'info, NftListingData>,
-    #[account(mut)]
-    pub listing_account: Account<'info, FixedPriceListingData>,
-    #[account(mut)]
-    pub owner: Signer<'info>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, token::Token>,
+    #[account(mut)]
+    pub listing_account: Account<'info, EnglishAuctionListingData>,
 }

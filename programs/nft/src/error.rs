@@ -32,8 +32,8 @@ pub enum ErrorCode {
     #[msg("Seller Token Account is not owner of the nft")]
     TokenAccountOwnerIssue,
     // 5009
-    #[msg("Seller dat provided doesn't match")]
-    SellerDataIssue,
+    #[msg("Issue with the data provided")]
+    DataIssue,
     // 5010
     #[msg("StartDate cannot be in the past")]
     StartDateIsInPast,
@@ -42,5 +42,44 @@ pub enum ErrorCode {
     EndDateIsEarlierThanBeginDate,
     // 5012
     #[msg("Invalid Data input given")]
-    InvalidDate,
+    InvalidData,
+    // 5013
+    #[msg("Auction not started yet")]
+    AuctionNotStarted,
+    // 5014
+    #[msg("Auction has ended")]
+    AuctionEnded,
+    // 5015
+    #[msg("Auction Bid lower than Highest bidder")]
+    BidLowerThanHighestBider,
+    // 5016
+    #[msg("Auction Bid lower than startling bidder")]
+    BidLowerThanStartingBid,
+    // 5017
+    #[msg("Auction has not been set yet")]
+    AuctionNotSet,
+    // 5018
+    #[msg("The seller can't be bid")]
+    SellerBidIssue,
+    // 5019
+    #[msg("The listing is not closed")]
+    ListingNotClosed,
+    // 5020
+    #[msg("The listing is still active")]
+    ActiveListing,
+    // 5021
+    #[msg("The account doesn't have lamports to withdraw")]
+    NOLamports,
+    // 5021
+    #[msg("The highest bidder can't withdraw fund")]
+    HighestBidderWithDrawIssue,
+    // 5022
+    #[msg("The bid provided is an invalid one")]
+    BidAccountIssue,
+    // 5023
+    #[msg("The Withdrawer doesn't have access")]
+    UnAuthorizedWithdrawal,
+    // 5024
+    #[msg("The Given Token is not the owner of the nft")]
+    MintTokenIssue,
 }

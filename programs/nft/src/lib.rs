@@ -7,13 +7,23 @@ pub mod utils;
 pub mod error;
 
 use crate::{
-    processor::fixed_price_listing::{
-        buy_nft_fixed_price_listing::*, close_fixed_price_listing::*, create_fixed_price_listing::*,
+    processor::{
+        english_auction_listing::{
+            bid_english_auction::*,
+            close_english_auction_listing::*,
+            create_english_auction_listing::*,
+            utils::{create_english_auction_bid_pda::*, create_english_auction_listing_pda::*},
+            withdraw_bid_english_auction::*,
+        },
+        fixed_price_listing::{
+            buy_nft_fixed_price_listing::*, close_fixed_price_listing::*,
+            create_fixed_price_listing::*, utils::create_fixed_price_listing_pda::*,
+        },
     },
-    utils::{create_fixed_price_listing_pda::*, create_nft_listing_pda::*},
+    utils::create_nft_listing_pda::*,
 };
 
-declare_id!("D3544YeKkf5zB3ENMWiNR62kENQtJhkhCi2CbnruVrBi");
+declare_id!("68CvRsPtapjtDRNhAQTYy3iXNnofNudibfJNEj1DE3i9");
 
 #[program]
 pub mod listings {
@@ -45,5 +55,39 @@ pub mod listings {
 
     pub fn buy_nft_fixed_price_listing(ctx: Context<BuyNftFixedPriceListing>) -> Result<()> {
         buy_nft_fixed_price_listing_fn(ctx)
+    }
+
+    pub fn create_english_auction_listing_pda(
+        ctx: Context<CreateEnglishAuctionListingPda>,
+        count: String,
+    ) -> Result<()> {
+        create_english_auction_listing_pda_fn(ctx, count)
+    }
+
+    pub fn create_english_auction_listing(
+        ctx: Context<CreateEnglishAuctionListing>,
+        start_date: u64,
+        end_date: u64,
+        starting_price_lamports: u64,
+    ) -> Result<()> {
+        create_english_auction_listing_fn(ctx, start_date, end_date, starting_price_lamports)
+    }
+
+    pub fn close_english_auction_listing(ctx: Context<CloseEnglishAuctionListing>) -> Result<()> {
+        close_english_auction_listing_fn(ctx)
+    }
+
+    pub fn create_english_auction_bid_pda(ctx: Context<CreateEnglishAuctionBidPda>) -> Result<()> {
+        create_english_auction_bid_pda_fn(ctx)
+    }
+    pub fn bid_english_auction(
+        ctx: Context<BidEnglishAuction>,
+        bid_price_lamports: u64,
+    ) -> Result<()> {
+        bid_english_auction_fn(ctx, bid_price_lamports)
+    }
+
+    pub fn withdraw_bid_english_auction(ctx: Context<WithdrawBidEnglishAuction>) -> Result<()> {
+        withdraw_bid_english_auction_fn(ctx)
     }
 }

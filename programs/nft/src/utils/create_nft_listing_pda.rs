@@ -34,4 +34,5 @@ pub struct CreateNftListingPda<'info> {
 pub struct NftListingData {
     pub amount: u32,
     pub active: bool,
+    pub listing: Option<String>,
 }
