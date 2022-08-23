@@ -67,6 +67,10 @@ pub fn withdraw_bid_english_auction_fn(ctx: Context<WithdrawBidEnglishAuction>) 
         return Err(ErrorCode::BidAccountIssue.into());
     }
 
+    if bid_account.withdrawn_by.is_some() {
+        return Err(ErrorCode::DoubleWithdrawIssue.into());
+    }
+
     **ctx.accounts.bid_account_vault.try_borrow_mut_lamports()? -=
         bid_account.bid_price_lamports.unwrap();
     **ctx.accounts.withdrawer.try_borrow_mut_lamports()? += bid_account.bid_price_lamports.unwrap();

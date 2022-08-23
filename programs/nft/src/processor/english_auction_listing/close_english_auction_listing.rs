@@ -86,7 +86,7 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
                     authority: nft_listing.to_account_info(),
                 },
                 &[&[
-                    ctx.accounts.mint.key().as_ref(),
+                    listing_account.mint.key().as_ref(),
                     b"_nft_listing_data",
                     &[bump_seed],
                 ]],
@@ -122,13 +122,12 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
 #[derive(Accounts)]
 pub struct CloseEnglishAuctionListing<'info> {
     #[account(mut)]
-    pub mint: Account<'info, token::Mint>,
-    #[account(mut)]
     pub seller: Signer<'info>,
     #[account(mut)]
     pub seller_token: Account<'info, token::TokenAccount>,
     #[account(mut)]
-    pub bidder_token: Account<'info, token::TokenAccount>,
+    /// CHECK: Checked under transfer
+    pub bidder_token: UncheckedAccount<'info>,
     #[account(mut)]
     pub nft_listing_account: Account<'info, NftListingData>,
     #[account(mut)]

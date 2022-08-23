@@ -97,4 +97,7 @@ pub enum ErrorCode {
     // 5029
     #[msg("The starting price must be higher than zero")]
     PriceIssue,
+    // 5029
+    #[msg("Double withdrawal attempted")]
+    DoubleWithdrawIssue,
 }

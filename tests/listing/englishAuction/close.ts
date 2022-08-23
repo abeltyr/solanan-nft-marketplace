@@ -39,7 +39,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "5EffzfBxNy1cr1jgyJeDnDpiViUsCp55MnP6KrjY4Kp9",
+      "2Kpjb8XzVA3NbhVvQEyGKAGQq8LmqjbWcDVGCuE5x1m8",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -110,15 +110,18 @@ describe("english auction", () => {
         listingPda,
       );
 
+      let bidderToken = new anchor.web3.PublicKey(nftPda);
+
+      if (listingData?.highestBidderToken)
+        bidderToken = listingData?.highestBidderToken;
       let transaction = await program.methods
         .closeEnglishAuctionListing()
         .accounts({
           nftListingAccount: nftPda,
           listingAccount: listingPda,
-          mint: mint,
           seller: payer.publicKey,
           sellerToken: ownerTokenAddress,
-          bidderToken: listingData.highestBidderToken,
+          bidderToken: bidderToken,
         })
         .signers([payer])
         .rpc();

@@ -46,7 +46,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "5EffzfBxNy1cr1jgyJeDnDpiViUsCp55MnP6KrjY4Kp9",
+      "2Kpjb8XzVA3NbhVvQEyGKAGQq8LmqjbWcDVGCuE5x1m8",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -146,7 +146,7 @@ describe("english auction", () => {
         "Bid For Listing --------------------------------------------------------------------",
       );
 
-      const saleAmount = 0.045 * anchor.web3.LAMPORTS_PER_SOL;
+      const saleAmount = 0.015 * anchor.web3.LAMPORTS_PER_SOL;
 
       let transaction = await program.methods
         .bidEnglishAuction(new anchor.BN(saleAmount))
@@ -174,13 +174,13 @@ describe("english auction", () => {
       console.log("error", e);
     }
   });
-  it.skip("bid 2", async () => {
+  it("bid 2", async () => {
     try {
       console.log(
         "Bid 2For Listing --------------------------------------------------------------------",
       );
 
-      const saleAmount = 0.0451 * anchor.web3.LAMPORTS_PER_SOL;
+      const saleAmount = 0.0151 * anchor.web3.LAMPORTS_PER_SOL;
 
       let transaction = await program.methods
         .bidEnglishAuction(new anchor.BN(saleAmount))
