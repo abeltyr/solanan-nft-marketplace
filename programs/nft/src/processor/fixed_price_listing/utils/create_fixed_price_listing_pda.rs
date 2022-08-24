@@ -8,11 +8,8 @@ use crate::{
     utils::create_nft_listing_pda::*,
 };
 
-pub fn create_fixed_price_listing_pda_fn(
-    ctx: Context<CreateFixedPriceListingPda>,
-    count: String,
-) -> Result<()> {
-    msg!("Fixed Price nft Listing count:{}...", count);
+pub fn create_fixed_price_listing_pda_fn(ctx: Context<CreateFixedPriceListingPda>) -> Result<()> {
+    msg!("Start Fixed Price nft Listing PDA",);
 
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
 
@@ -46,8 +43,6 @@ pub fn create_fixed_price_listing_pda_fn(
 }
 
 #[derive(Accounts)]
-//check alternative
-#[instruction(count: String)]
 pub struct CreateFixedPriceListingPda<'info> {
     #[account(mut)]
     pub seller: Signer<'info>,
@@ -62,7 +57,7 @@ pub struct CreateFixedPriceListingPda<'info> {
         seeds = [
             nft_listing_account.key().as_ref(),
             b"_Fixed_Price_",
-            count.as_ref(),
+            nft_listing_account.amount.to_string().as_ref(),
         ],
         bump
     )]

@@ -38,7 +38,7 @@ describe("listings", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "2Kpjb8XzVA3NbhVvQEyGKAGQq8LmqjbWcDVGCuE5x1m8",
+      "F5PBa9pqwUsVUYSffyADypu56FBPoV4LfGv8qbJHva6Z",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(

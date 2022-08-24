@@ -10,9 +10,8 @@ use crate::{
 
 pub fn create_english_auction_listing_pda_fn(
     ctx: Context<CreateEnglishAuctionListingPda>,
-    count: String,
 ) -> Result<()> {
-    msg!("English Auction nft Listing count:{}...", count);
+    msg!("Start English Auction Listing Pda");
 
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
 
@@ -47,7 +46,6 @@ pub fn create_english_auction_listing_pda_fn(
 }
 
 #[derive(Accounts)]
-#[instruction(count: String)]
 pub struct CreateEnglishAuctionListingPda<'info> {
     #[account(mut)]
     pub seller: Signer<'info>,
@@ -62,7 +60,7 @@ pub struct CreateEnglishAuctionListingPda<'info> {
         seeds = [
             nft_listing_account.key().as_ref(),
             b"_English_Auction_",
-            count.as_ref(),
+            nft_listing_account.amount.to_string().as_ref(),
         ],
         bump
     )]

@@ -23,7 +23,7 @@ use crate::{
     utils::create_nft_listing_pda::*,
 };
 
-declare_id!("68CvRsPtapjtDRNhAQTYy3iXNnofNudibfJNEj1DE3i9");
+declare_id!("9otEc69qDRHTpEiS64kqm41tFRAqXSJZt4c8aN3kDEy1");
 
 #[program]
 pub mod listings {
@@ -42,11 +42,8 @@ pub mod listings {
         create_fixed_price_listing_fn(ctx, start_date, end_date, price_lamports)
     }
 
-    pub fn create_fixed_price_listing_pda(
-        ctx: Context<CreateFixedPriceListingPda>,
-        count: String,
-    ) -> Result<()> {
-        create_fixed_price_listing_pda_fn(ctx, count)
+    pub fn create_fixed_price_listing_pda(ctx: Context<CreateFixedPriceListingPda>) -> Result<()> {
+        create_fixed_price_listing_pda_fn(ctx)
     }
 
     pub fn close_fixed_price_listing(ctx: Context<CloseFixedPriceListing>) -> Result<()> {
@@ -59,9 +56,8 @@ pub mod listings {
 
     pub fn create_english_auction_listing_pda(
         ctx: Context<CreateEnglishAuctionListingPda>,
-        count: String,
     ) -> Result<()> {
-        create_english_auction_listing_pda_fn(ctx, count)
+        create_english_auction_listing_pda_fn(ctx)
     }
 
     pub fn create_english_auction_listing(
