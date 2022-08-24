@@ -1,7 +1,4 @@
-use {
-    anchor_lang::prelude::*,
-    anchor_spl::{associated_token, token},
-};
+use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
     error::ErrorCode::NftAlreadyListed, utils::create_nft_listing_pda::*,

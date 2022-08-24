@@ -1,8 +1,9 @@
 use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
-    error::ErrorCode, processor::fixed_price_listing::utils::create_fixed_price_listing_pda::*,
+    processor::fixed_price_listing::utils::create_fixed_price_listing_pda::*,
     utils::create_nft_listing_pda::*,
+    validate::{check_listing_data::*, check_nft_listing_match::*, check_nft_owner::*},
 };
 
 pub fn create_fixed_price_listing_fn(
@@ -19,42 +20,31 @@ pub fn create_fixed_price_listing_fn(
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
     let listing_account = &mut ctx.accounts.listing_account;
 
-    let (_pubkey_mint, _) = Pubkey::find_program_address(
-        &[listing_account.mint.key().as_ref(), b"_nft_listing_data"],
-        ctx.program_id,
-    );
+    // validate the nft listing account and check if active
 
-    //check if the given nft listing data is the same
-    if _pubkey_mint != nft_listing_account.key() {
-        return Err(ErrorCode::NftListingInvalidData.into());
-    }
+    check_nft_listing_match(
+        &ctx.program_id,
+        &listing_account.mint,
+        listing_account.is_active,
+        &nft_listing_account,
+    )?;
 
-    if nft_listing_account.active || listing_account.is_active {
-        return Err(ErrorCode::NftAlreadyListed.into());
-    }
+    // fetch token account of the seller and check owner
+    check_nft_owner(
+        &ctx.accounts.seller,
+        &ctx.accounts.seller_token,
+        nft_listing_account,
+    )?;
 
-    // check if the given seller is the same as the one creating the listing pda
-    if listing_account.seller != ctx.accounts.seller.key() {
-        return Err(ErrorCode::SellerInvalidData.into());
-    }
-
-    // start_date cannot be in the past
-    if start_date < Clock::get().unwrap().unix_timestamp as u64 {
-        return Err(ErrorCode::StartDateIsInPast.into());
-    }
-
-    // Check if the end_date is greater than the start_date
-    if start_date > end_date {
-        return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
-    }
-
-    if price_lamports <= 0 {
-        return Err(ErrorCode::PriceIssue.into());
-    }
-
-    if ctx.accounts.seller_token.amount != 1 {
-        return Err(ErrorCode::MintTokenIssue.into());
-    }
+    //validate the listing data
+    check_listing_data(
+        start_date,
+        end_date,
+        listing_account.close_date,
+        price_lamports,
+        &ctx.accounts.seller,
+        &listing_account.seller,
+    )?;
 
     // delegate the nft to a new a PDA
     token::approve(

@@ -100,4 +100,7 @@ pub enum ErrorCode {
     // 5029
     #[msg("Double withdrawal attempted")]
     DoubleWithdrawIssue,
+    // 5030
+    #[msg("Listing has not started yet")]
+    ListingNotStarted,
 }

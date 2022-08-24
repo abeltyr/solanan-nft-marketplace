@@ -69,12 +69,6 @@ describe("listings", () => {
 
     nftPda = findNftPda[0];
     console.log(await program.account.nftListingData.fetch(nftPda));
-    // create the nft listing
-  });
-  it("Create Listing Pda", async () => {
-    console.log(
-      "Create Listing Pda --------------------------------------------------------------------",
-    );
     const nftListingData = await program.account.nftListingData.fetch(nftPda);
     let count = nftListingData.amount;
 
@@ -89,29 +83,9 @@ describe("listings", () => {
     );
 
     listingPda = listing[0];
-
-    try {
-      let transaction = await program.methods
-        .createFixedPriceListingPda()
-        .accounts({
-          seller: payer.publicKey,
-          sellerToken: ownerTokenAddress,
-          nftListingAccount: nftPda,
-          listingAccount: listingPda,
-        })
-        .signers([payer])
-        .rpc();
-
-      console.log("fixed price listing pda transaction signature", transaction);
-      const listingData = await program.account.fixedPriceListingData.fetch(
-        listing[0],
-      );
-      console.log("listingData", listingData);
-    } catch (e) {
-      console.log("Listing Pda Exist", e);
-    }
+    console.log(listingPda.toString());
+    // create the nft listing
   });
-
   it("Fail Create Listing Pda by owner issue", async () => {
     console.log(
       "Fail Creating a second Listing Pda with invalid Data --------------------------------------------------------------------",
@@ -131,6 +105,7 @@ describe("listings", () => {
 
       assert.isNull(transaction);
     } catch (e) {
+      console.log(e.logs);
       assert.isNotNull(e);
     }
   });
@@ -153,7 +128,34 @@ describe("listings", () => {
 
       assert.isNull(transaction);
     } catch (e) {
+      console.log(e.logs);
       assert.isNotNull(e);
+    }
+  });
+  it("Create Listing Pda", async () => {
+    console.log(
+      "Create Listing Pda --------------------------------------------------------------------",
+    );
+
+    try {
+      let transaction = await program.methods
+        .createFixedPriceListingPda()
+        .accounts({
+          seller: payer.publicKey,
+          sellerToken: ownerTokenAddress,
+          nftListingAccount: nftPda,
+          listingAccount: listingPda,
+        })
+        .signers([payer])
+        .rpc();
+
+      console.log("fixed price listing pda transaction signature", transaction);
+      const listingData = await program.account.fixedPriceListingData.fetch(
+        listingPda,
+      );
+      console.log("listingData", listingData);
+    } catch (e) {
+      console.log("Listing Pda Exist", e.logs);
     }
   });
 });

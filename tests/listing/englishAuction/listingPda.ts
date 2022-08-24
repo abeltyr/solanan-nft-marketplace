@@ -69,11 +69,6 @@ describe("english auction", () => {
     );
 
     nftPda = findNftPda[0];
-  });
-  it("Create Listing Pda", async () => {
-    console.log(
-      "Create Listing Pda --------------------------------------------------------------------",
-    );
     const nftListingData = await program.account.nftListingData.fetch(nftPda);
     let count = nftListingData.amount;
 
@@ -88,29 +83,7 @@ describe("english auction", () => {
     );
 
     listingPda = listing[0];
-
-    try {
-      let transaction = await program.methods
-        .createEnglishAuctionListingPda()
-        .accounts({
-          seller: payer.publicKey,
-          sellerToken: ownerTokenAddress,
-          nftListingAccount: nftPda,
-          listingAccount: listingPda,
-        })
-        .signers([payer])
-        .rpc();
-
-      console.log("fixed price listing pda transaction signature", transaction);
-      const listingData = await program.account.englishAuctionListingData.fetch(
-        listing[0],
-      );
-      console.log("listingData", listingData);
-    } catch (e) {
-      console.log("Listing Pda Exist", e);
-    }
   });
-
   it("Fail Create Listing Pda by owner issue", async () => {
     console.log(
       "Fail Creating a second Listing Pda with owner issue --------------------------------------------------------------------",
@@ -130,6 +103,7 @@ describe("english auction", () => {
 
       assert.isNull(transaction);
     } catch (e) {
+      console.log(e.logs);
       assert.isNotNull(e);
     }
   });
@@ -152,7 +126,34 @@ describe("english auction", () => {
 
       assert.isNull(transaction);
     } catch (e) {
+      console.log(e.logs);
       assert.isNotNull(e);
+    }
+  });
+  it("Create Listing Pda", async () => {
+    console.log(
+      "Create Listing Pda --------------------------------------------------------------------",
+    );
+
+    try {
+      let transaction = await program.methods
+        .createEnglishAuctionListingPda()
+        .accounts({
+          seller: payer.publicKey,
+          sellerToken: ownerTokenAddress,
+          nftListingAccount: nftPda,
+          listingAccount: listingPda,
+        })
+        .signers([payer])
+        .rpc();
+
+      console.log("fixed price listing pda transaction signature", transaction);
+      const listingData = await program.account.englishAuctionListingData.fetch(
+        listingPda,
+      );
+      console.log("listingData", listingData);
+    } catch (e) {
+      console.log("Listing Pda Exist", e.logs);
     }
   });
 });
