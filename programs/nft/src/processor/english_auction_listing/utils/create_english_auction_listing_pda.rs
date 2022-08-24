@@ -4,8 +4,8 @@ use {
 };
 
 use crate::{
-    error::ErrorCode::{InvalidTokenAccount, MintTokenIssue, NftAlreadyListed},
-    utils::create_nft_listing_pda::*,
+    error::ErrorCode::NftAlreadyListed, utils::create_nft_listing_pda::*,
+    validate::check_nft_owner::*,
 };
 
 pub fn create_english_auction_listing_pda_fn(
@@ -20,25 +20,18 @@ pub fn create_english_auction_listing_pda_fn(
         return Err(NftAlreadyListed.into());
     }
 
-    // fetch token account of the seller
-    let seller_token = associated_token::get_associated_token_address(
-        &ctx.accounts.seller.key(),
-        &nft_listing_account.mint.key(),
-    );
-
-    if seller_token.key() != ctx.accounts.seller_token.key() {
-        return Err(InvalidTokenAccount.into());
-    }
-
-    if ctx.accounts.seller_token.amount != 1 {
-        return Err(MintTokenIssue.into());
-    }
+    // fetch token account of the seller and check owner
+    check_nft_owner(
+        &ctx.accounts.seller,
+        &ctx.accounts.seller_token,
+        nft_listing_account,
+    )?;
 
     // update the listing data
     let listing_account = &mut ctx.accounts.listing_account;
     listing_account.mint = nft_listing_account.mint;
     listing_account.seller = ctx.accounts.seller.key();
-    listing_account.seller_token = seller_token.key();
+    listing_account.seller_token = ctx.accounts.seller_token.key();
     listing_account.is_active = false;
     listing_account.nft_transferred = false;
 

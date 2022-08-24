@@ -1,11 +1,8 @@
-use {
-    anchor_lang::prelude::*,
-    anchor_spl::{associated_token, token},
-};
+use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
-    error::ErrorCode::{MintTokenIssue, NftAlreadyListed},
-    utils::create_nft_listing_pda::*,
+    error::ErrorCode::NftAlreadyListed, utils::create_nft_listing_pda::*,
+    validate::check_nft_owner::*,
 };
 
 pub fn create_fixed_price_listing_pda_fn(ctx: Context<CreateFixedPriceListingPda>) -> Result<()> {
@@ -18,21 +15,18 @@ pub fn create_fixed_price_listing_pda_fn(ctx: Context<CreateFixedPriceListingPda
         return Err(NftAlreadyListed.into());
     }
 
-    // fetch token account of the seller
-    let seller_token = associated_token::get_associated_token_address(
-        &ctx.accounts.seller.key(),
-        &nft_listing_account.mint.key(),
-    );
-
-    if ctx.accounts.seller_token.amount != 1 {
-        return Err(MintTokenIssue.into());
-    }
+    // fetch token account of the seller and check owner
+    check_nft_owner(
+        &ctx.accounts.seller,
+        &ctx.accounts.seller_token,
+        nft_listing_account,
+    )?;
 
     // update the listing data
     let listing_account = &mut ctx.accounts.listing_account;
     listing_account.seller = ctx.accounts.seller.key();
     listing_account.mint = nft_listing_account.mint;
-    listing_account.seller_token = Some(seller_token.key());
+    listing_account.seller_token = ctx.accounts.seller_token.key();
     listing_account.price_lamports = 0;
     listing_account.start_date = Some(0);
     listing_account.end_date = Some(0);
@@ -70,7 +64,7 @@ pub struct CreateFixedPriceListingPda<'info> {
 pub struct FixedPriceListingData {
     pub mint: Pubkey,
     pub seller: Pubkey,
-    pub seller_token: Option<Pubkey>,
+    pub seller_token: Pubkey,
     pub buyer: Option<Pubkey>,
     pub buyer_token: Option<Pubkey>,
     pub price_lamports: u64,

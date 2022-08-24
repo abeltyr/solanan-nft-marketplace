@@ -5,6 +5,7 @@ import {
   getAccount,
 } from "@solana/spl-token";
 import { clusterApiUrl, Connection } from "@solana/web3.js";
+import { assert } from "chai";
 import { Listings } from "../../../target/types/listings";
 
 describe("english auction", () => {
@@ -107,6 +108,51 @@ describe("english auction", () => {
       console.log("listingData", listingData);
     } catch (e) {
       console.log("Listing Pda Exist", e);
+    }
+  });
+
+  it("Fail Create Listing Pda by owner issue", async () => {
+    console.log(
+      "Fail Creating a second Listing Pda with owner issue --------------------------------------------------------------------",
+    );
+
+    try {
+      let transaction = await program.methods
+        .createFixedPriceListingPda()
+        .accounts({
+          seller: buyer.publicKey,
+          sellerToken: buyerTokenAddress,
+          nftListingAccount: nftPda,
+          listingAccount: listingPda,
+        })
+        .signers([buyer])
+        .rpc();
+
+      assert.isNull(transaction);
+    } catch (e) {
+      assert.isNotNull(e);
+    }
+  });
+  it("Fail Create Listing Pda by the token account miss match", async () => {
+    console.log(
+      "Fail Creating a second Listing Pda with the token account miss match --------------------------------------------------------------------",
+    );
+
+    try {
+      let transaction = await program.methods
+        .createFixedPriceListingPda()
+        .accounts({
+          seller: buyer.publicKey,
+          sellerToken: ownerTokenAddress,
+          nftListingAccount: nftPda,
+          listingAccount: listingPda,
+        })
+        .signers([buyer])
+        .rpc();
+
+      assert.isNull(transaction);
+    } catch (e) {
+      assert.isNotNull(e);
     }
   });
 });

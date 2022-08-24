@@ -6,6 +6,8 @@ pub mod utils;
 
 pub mod error;
 
+pub mod validate;
+
 use crate::{
     processor::{
         english_auction_listing::{
