@@ -1,11 +1,10 @@
 use anchor_lang::prelude::*;
 
-use crate::{error::ErrorCode, utils::create_nft_listing_pda::*};
+use crate::{error::ErrorCode::NftListingInvalidData, utils::create_nft_listing_pda::*};
 
-pub fn check_nft_listing_match<'info>(
+pub fn check_nft_listing_relation<'info>(
     program_id: &Pubkey,
     mint: &Pubkey,
-    is_active: bool,
     nft_listing_account: &Account<'info, NftListingData>,
 ) -> Result<(Pubkey, u8)> {
     let (_pubkey, _seed) =
@@ -13,11 +12,7 @@ pub fn check_nft_listing_match<'info>(
 
     // check if the given nft listing data is the same
     if _pubkey != nft_listing_account.key() {
-        return Err(ErrorCode::NftListingInvalidData.into());
-    }
-
-    if nft_listing_account.active || is_active {
-        return Err(ErrorCode::NftAlreadyListed.into());
+        return Err(NftListingInvalidData.into());
     }
 
     Ok((_pubkey, _seed))

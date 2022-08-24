@@ -41,7 +41,7 @@ describe("listings", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "F5PBa9pqwUsVUYSffyADypu56FBPoV4LfGv8qbJHva6Z",
+      "DuBRzpzHJjv8FpJGMuvHi7vDHSFaziFhKvqxK7iWNSPo",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -70,7 +70,7 @@ describe("listings", () => {
     );
 
     nftPda = findNftPda[0];
-    console.log(await program.account.nftListingData.fetch(nftPda));
+    console.log("nftPda", await program.account.nftListingData.fetch(nftPda));
     // create the nft listing
   });
   it("Create Listing Pda", async () => {

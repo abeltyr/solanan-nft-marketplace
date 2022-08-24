@@ -5,6 +5,7 @@ import {
   getAccount,
 } from "@solana/spl-token";
 import { clusterApiUrl, Connection } from "@solana/web3.js";
+import { assert } from "chai";
 import { Listings } from "../../../target/types/listings";
 
 describe("listings", () => {
@@ -38,7 +39,7 @@ describe("listings", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "F5PBa9pqwUsVUYSffyADypu56FBPoV4LfGv8qbJHva6Z",
+      "DuBRzpzHJjv8FpJGMuvHi7vDHSFaziFhKvqxK7iWNSPo",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -88,10 +89,6 @@ describe("listings", () => {
     );
 
     listingPda = listing[0];
-    console.log(
-      "listingPda",
-      await program.account.fixedPriceListingData.fetch(listingPda),
-    );
   });
   it("check buyer balance", async () => {
     console.log(
@@ -103,6 +100,48 @@ describe("listings", () => {
     const payerData = await connection.getAccountInfo(payer.publicKey);
     console.log("payerData", payerData.lamports / anchor.web3.LAMPORTS_PER_SOL);
   });
+  it("fail buy by providing invalid nftPda", async () => {
+    try {
+      console.log(
+        "fail buy by providing invalid nftPda --------------------------------------------------------------------",
+      );
+      const mint = new anchor.web3.PublicKey(
+        "dEmsanDAqKSC4C9EFGx4JPgGMYk9Bs3f5oZKdTcMAyg",
+      );
+
+      const findNftPda = await anchor.web3.PublicKey.findProgramAddress(
+        [mint.toBuffer(), Buffer.from("_nft_listing_data")],
+        program.programId,
+      );
+
+      const nftPda = findNftPda[0];
+
+      const buyerData = await connection.getAccountInfo(buyer.publicKey);
+      console.log(
+        "buyerData",
+        buyerData.lamports / anchor.web3.LAMPORTS_PER_SOL,
+      );
+
+      let transaction = await program.methods
+        .buyNftFixedPriceListing()
+        .accounts({
+          nftListingAccount: nftPda,
+          listingAccount: listingPda,
+          buyer: buyer.publicKey,
+          seller: payer.publicKey,
+          buyerToken: buyerTokenAddress,
+          sellerToken: ownerTokenAddress,
+        })
+        .signers([buyer])
+        .rpc();
+
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+
   it("buy ", async () => {
     try {
       console.log(

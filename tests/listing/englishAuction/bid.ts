@@ -5,6 +5,7 @@ import {
   getAccount,
 } from "@solana/spl-token";
 import { clusterApiUrl, Connection } from "@solana/web3.js";
+import { assert } from "chai";
 import { Listings } from "../../../target/types/listings";
 
 describe("english auction", () => {
@@ -46,7 +47,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "F5PBa9pqwUsVUYSffyADypu56FBPoV4LfGv8qbJHva6Z",
+      "DuBRzpzHJjv8FpJGMuvHi7vDHSFaziFhKvqxK7iWNSPo",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -140,6 +141,187 @@ describe("english auction", () => {
       buyerData1.lamports / anchor.web3.LAMPORTS_PER_SOL,
     );
   });
+
+  it("Fail bid by providing invalid bid and bid vault data ", async () => {
+    try {
+      console.log(
+        "Fail bid by providing invalid bid and bid vault data  --------------------------------------------------------------------",
+      );
+
+      const saleAmount = 0.0049 * anchor.web3.LAMPORTS_PER_SOL;
+
+      let transaction = await program.methods
+        .bidEnglishAuction(new anchor.BN(saleAmount))
+        .accounts({
+          listingAccount: listingPda,
+          bidder: buyer1.publicKey,
+          bidAccount: bidPda1,
+          bidAccountVault: bidPda,
+          bidderToken: buyer1TokenAddress,
+          nftListingAccount: nftPda,
+          sellerToken: ownerTokenAddress,
+        })
+        .signers([buyer1])
+        .rpc();
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+
+  it("Fail bid by providing invalid bid account", async () => {
+    try {
+      console.log(
+        "Fail bid by providing invalid buyer token --------------------------------------------------------------------",
+      );
+
+      const saleAmount = 0.0049 * anchor.web3.LAMPORTS_PER_SOL;
+
+      let transaction = await program.methods
+        .bidEnglishAuction(new anchor.BN(saleAmount))
+        .accounts({
+          listingAccount: listingPda,
+          bidder: buyer1.publicKey,
+          bidAccount: bidPda,
+          bidAccountVault: bidPda,
+          bidderToken: buyer1TokenAddress,
+          nftListingAccount: nftPda,
+          sellerToken: ownerTokenAddress,
+        })
+        .signers([buyer1])
+        .rpc();
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+
+  it("Fail bid by providing invalid nftPda", async () => {
+    try {
+      console.log(
+        "Fail bid by providing invalid nftPda --------------------------------------------------------------------",
+      );
+
+      const mint = new anchor.web3.PublicKey(
+        "dEmsanDAqKSC4C9EFGx4JPgGMYk9Bs3f5oZKdTcMAyg",
+      );
+
+      const findNftPda = await anchor.web3.PublicKey.findProgramAddress(
+        [mint.toBuffer(), Buffer.from("_nft_listing_data")],
+        program.programId,
+      );
+
+      const nftPda = findNftPda[0];
+
+      const saleAmount = 0.0049 * anchor.web3.LAMPORTS_PER_SOL;
+
+      let transaction = await program.methods
+        .bidEnglishAuction(new anchor.BN(saleAmount))
+        .accounts({
+          listingAccount: listingPda,
+          bidder: buyer1.publicKey,
+          bidAccount: bidPda1,
+          bidAccountVault: bidPda1,
+          bidderToken: buyer1TokenAddress,
+          nftListingAccount: nftPda,
+          sellerToken: ownerTokenAddress,
+        })
+        .signers([buyer1])
+        .rpc();
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+
+  it("Fail bid by providing invalid owner token", async () => {
+    try {
+      console.log(
+        "Fail bid by providing invalid owner token --------------------------------------------------------------------",
+      );
+
+      const saleAmount = 0.0049 * anchor.web3.LAMPORTS_PER_SOL;
+
+      let transaction = await program.methods
+        .bidEnglishAuction(new anchor.BN(saleAmount))
+        .accounts({
+          listingAccount: listingPda,
+          bidder: buyer1.publicKey,
+          bidAccount: bidPda1,
+          bidAccountVault: bidPda1,
+          bidderToken: buyer1TokenAddress,
+          nftListingAccount: nftPda,
+          sellerToken: buyer1TokenAddress,
+          // ownerTokenAddress,
+        })
+        .signers([buyer1])
+        .rpc();
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+
+  it("Fail bid by providing invalid buyer token", async () => {
+    try {
+      console.log(
+        "Fail bid by providing invalid buyer token --------------------------------------------------------------------",
+      );
+
+      const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
+
+      let transaction = await program.methods
+        .bidEnglishAuction(new anchor.BN(saleAmount))
+        .accounts({
+          listingAccount: listingPda,
+          bidder: buyer1.publicKey,
+          bidAccount: bidPda1,
+          bidAccountVault: bidPda1,
+          bidderToken: ownerTokenAddress,
+          nftListingAccount: nftPda,
+          sellerToken: ownerTokenAddress,
+        })
+        .signers([buyer1])
+        .rpc();
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+
+  it("Fail bid with a lower bid than the starting point", async () => {
+    try {
+      console.log(
+        "Fail bid with a lower bid than the starting point --------------------------------------------------------------------",
+      );
+
+      const saleAmount = 0.0049 * anchor.web3.LAMPORTS_PER_SOL;
+
+      let transaction = await program.methods
+        .bidEnglishAuction(new anchor.BN(saleAmount))
+        .accounts({
+          listingAccount: listingPda,
+          bidder: buyer1.publicKey,
+          bidAccount: bidPda1,
+          bidAccountVault: bidPda1,
+          bidderToken: buyer1TokenAddress,
+          nftListingAccount: nftPda,
+          sellerToken: ownerTokenAddress,
+        })
+        .signers([buyer1])
+        .rpc();
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+
   it("bid ", async () => {
     try {
       console.log(
@@ -174,13 +356,13 @@ describe("english auction", () => {
       console.log("error", e);
     }
   });
-  it("bid 2", async () => {
+  it("Fail bid with a lower bid than highest", async () => {
     try {
       console.log(
-        "Bid 2For Listing --------------------------------------------------------------------",
+        "Fail bid with a lower bid than highest --------------------------------------------------------------------",
       );
 
-      const saleAmount = 0.0151 * anchor.web3.LAMPORTS_PER_SOL;
+      const saleAmount = 0.0149 * anchor.web3.LAMPORTS_PER_SOL;
 
       let transaction = await program.methods
         .bidEnglishAuction(new anchor.BN(saleAmount))
@@ -195,17 +377,10 @@ describe("english auction", () => {
         })
         .signers([buyer1])
         .rpc();
-      console.log("Your transaction signature", transaction);
-      const bidData = await program.account.englishAuctionListingBidData.fetch(
-        bidPda1,
-      );
-      const listingData = await program.account.englishAuctionListingData.fetch(
-        listingPda,
-      );
-
-      console.log({ bidData, listingData });
+      assert.isNull(transaction);
     } catch (e) {
-      console.log("error", e);
+      console.log(e.error);
+      assert.isNotNull(e);
     }
   });
   it("check buyer balance", async () => {

@@ -44,11 +44,11 @@ pub enum ErrorCode {
     #[msg("Invalid Data input given")]
     InvalidData,
     // 5013
-    #[msg("Auction not started yet")]
-    AuctionNotStarted,
+    #[msg("Listing has not started yet")]
+    ListingNotStarted,
     // 5014
-    #[msg("Auction has ended")]
-    AuctionEnded,
+    #[msg("Listing has been Ended")]
+    ListingEnded,
     // 5015
     #[msg("Auction Bid lower than Highest bidder")]
     BidLowerThanHighestBider,
@@ -100,7 +100,4 @@ pub enum ErrorCode {
     // 5029
     #[msg("Double withdrawal attempted")]
     DoubleWithdrawIssue,
-    // 5030
-    #[msg("Listing has not started yet")]
-    ListingNotStarted,
 }

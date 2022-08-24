@@ -9,7 +9,7 @@ use crate::{
 };
 
 pub fn check_nft_owner<'info>(
-    owner: &AccountInfo<'info>,
+    owner: &Pubkey,
     owner_token: &Account<'info, token::TokenAccount>,
     nft_listing_account: &Account<'info, NftListingData>,
 ) -> Result<Pubkey> {

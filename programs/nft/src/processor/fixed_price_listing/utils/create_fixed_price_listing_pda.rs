@@ -17,7 +17,7 @@ pub fn create_fixed_price_listing_pda_fn(ctx: Context<CreateFixedPriceListingPda
 
     // fetch token account of the seller and check owner
     check_nft_owner(
-        &ctx.accounts.seller,
+        &ctx.accounts.seller.key(),
         &ctx.accounts.seller_token,
         nft_listing_account,
     )?;

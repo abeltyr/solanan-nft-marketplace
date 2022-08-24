@@ -19,7 +19,7 @@ pub fn create_english_auction_listing_pda_fn(
 
     // fetch token account of the seller and check owner
     check_nft_owner(
-        &ctx.accounts.seller,
+        &ctx.accounts.seller.key(),
         &ctx.accounts.seller_token,
         nft_listing_account,
     )?;

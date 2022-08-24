@@ -3,7 +3,7 @@ use {anchor_lang::prelude::*, anchor_spl::token};
 use crate::{
     processor::english_auction_listing::utils::create_english_auction_listing_pda::*,
     utils::create_nft_listing_pda::*,
-    validate::{check_listing_data::*, check_nft_listing_match::*, check_nft_owner::*},
+    validate::{check_listing_data::*, check_listing_is_not_active::*, check_nft_owner::*},
 };
 
 pub fn create_english_auction_listing_fn(
@@ -23,7 +23,7 @@ pub fn create_english_auction_listing_fn(
     let listing_account = &mut ctx.accounts.listing_account;
 
     // validate the nft listing account and check if active
-    check_nft_listing_match(
+    check_listing_is_not_active(
         &ctx.program_id,
         &listing_account.mint,
         listing_account.is_active,
@@ -32,7 +32,7 @@ pub fn create_english_auction_listing_fn(
 
     // fetch token account of the seller and check owner
     check_nft_owner(
-        &ctx.accounts.seller,
+        &ctx.accounts.seller.key(),
         &ctx.accounts.seller_token,
         nft_listing_account,
     )?;
