@@ -1,6 +1,6 @@
 use {
     anchor_lang::{prelude::*, system_program},
-    anchor_spl::{associated_token, token},
+    anchor_spl::token,
 };
 
 use crate::{
@@ -9,7 +9,10 @@ use crate::{
         create_english_auction_bid_pda::*, create_english_auction_listing_pda::*,
     },
     utils::create_nft_listing_pda::*,
-    validate::{check_active_listing::*, check_listing_is_active::*, check_nft_owner::*},
+    validate::{
+        check_active_listing_data::*, check_listing_is_active::*, check_nft_owner::*,
+        check_token_owner::*,
+    },
 };
 
 pub fn bid_english_auction_fn(
@@ -25,11 +28,12 @@ pub fn bid_english_auction_fn(
     let listing_account = &mut ctx.accounts.listing_account;
     let bid_account = &mut ctx.accounts.bid_account;
 
-    // check the bidder is the same as the bid account Pda creator
+    // check the bid PDA and bid vault match
     if bid_account.key() != ctx.accounts.bid_account_vault.key() {
         return Err(ErrorCode::InvalidData.into());
     }
 
+    // check the bidder is the same as the bid account Pda creator
     if bid_account.bidder.key() != ctx.accounts.bidder.key() {
         return Err(ErrorCode::BidderInvalidData.into());
     }
@@ -42,12 +46,12 @@ pub fn bid_english_auction_fn(
     )?;
 
     check_nft_owner(
-        &&listing_account.seller.clone(),
+        &listing_account.seller.clone(),
         &ctx.accounts.seller_token,
         nft_listing_account,
     )?;
 
-    check_active_listing(
+    check_active_listing_data(
         listing_account.start_date,
         listing_account.end_date,
         listing_account.close_date,
@@ -55,6 +59,13 @@ pub fn bid_english_auction_fn(
         listing_account.sold,
         &nft_listing,
         &ctx.accounts.seller_token,
+    )?;
+
+    //check bidder token match
+    check_token_owner(
+        &ctx.accounts.bidder.key(),
+        &ctx.accounts.bidder_token,
+        &listing_account.mint.key(),
     )?;
 
     // sum up the total lamports that were deposited
@@ -75,16 +86,6 @@ pub fn bid_english_auction_fn(
         return Err(ErrorCode::BidLowerThanHighestBider.into());
     }
 
-    // fetch token account of the bider
-    let bidder_token = associated_token::get_associated_token_address(
-        &ctx.accounts.bidder.key(),
-        &listing_account.mint.clone(),
-    );
-
-    if bidder_token.key() != ctx.accounts.bidder_token.key() {
-        return Err(ErrorCode::InvalidTokenAccount.into());
-    }
-
     // transfer the fund
     system_program::transfer(
         CpiContext::new(
@@ -97,14 +98,14 @@ pub fn bid_english_auction_fn(
         bid_price_lamports,
     )?;
 
-    bid_account.bidder_token = bidder_token.key();
+    bid_account.bidder_token = ctx.accounts.bidder_token.key();
     bid_account.bid_price_lamports = Some(bid_account_lamports);
     bid_account.fund_deposit = Some(true);
 
     listing_account.highest_bid_pda = Some(ctx.accounts.bid_account.key().clone());
     listing_account.highest_bid_lamports = Some(bid_account_lamports);
     listing_account.highest_bidder = Some(ctx.accounts.bidder.key());
-    listing_account.highest_bidder_token = Some(bidder_token.key());
+    listing_account.highest_bidder_token = Some(ctx.accounts.bidder_token.key());
 
     Ok(())
 }

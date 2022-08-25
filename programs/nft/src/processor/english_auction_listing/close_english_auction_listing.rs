@@ -1,12 +1,13 @@
-use {
-    anchor_lang::prelude::*,
-    anchor_spl::{associated_token, token},
-};
+use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
     error::ErrorCode,
     processor::english_auction_listing::utils::create_english_auction_listing_pda::*,
     utils::create_nft_listing_pda::*,
+    validate::{
+        check_listing_closing::*, check_nft_listing_relation::*, check_token_owner::*,
+        check_token_owner_and_delegation::*,
+    },
 };
 pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>) -> Result<()> {
     msg!("Closing The English Auction Listing...");
@@ -16,65 +17,40 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
     let listing_account = &mut ctx.accounts.listing_account;
 
-    let (_pubkey_mint, bump_seed) = Pubkey::find_program_address(
-        &[listing_account.mint.key().as_ref(), b"_nft_listing_data"],
-        ctx.program_id,
-    );
+    let nft_listing_pda =
+        check_nft_listing_relation(&ctx.program_id, &listing_account.mint, &nft_listing_account)?;
 
-    //check if the given nft listing data is the same
-    if _pubkey_mint != nft_listing.key() {
-        return Err(ErrorCode::NftListingInvalidData.into());
-    }
+    let bump_seed = nft_listing_pda.1;
 
-    // check if the given seller is the same as the one provided in the listing
-    // TODO:add an admin so that the admin can also close
-    if listing_account.seller != ctx.accounts.seller.key() {
-        return Err(ErrorCode::SellerInvalidData.into());
-    }
+    check_token_owner(
+        &listing_account.seller.clone(),
+        &ctx.accounts.seller_token,
+        &nft_listing_account.mint.key(),
+    )?;
 
-    // fetch token account of the owner
-    let seller_token = associated_token::get_associated_token_address(
-        &listing_account.seller.key(),
-        &listing_account.mint.key(),
-    );
-
-    // validate the given token address match with the account
-    if seller_token.key() != ctx.accounts.seller_token.key() {
-        return Err(ErrorCode::InvalidTokenAccount.into());
-    }
-
-    // check the given token address has access to the nft and that it has given delegation authority
-    if ctx.accounts.seller_token.delegate.is_none()
-        || ctx.accounts.seller_token.delegate.unwrap() != nft_listing.key()
-        || ctx.accounts.seller_token.delegated_amount != 100000000
-        || ctx.accounts.seller_token.amount != 1
-    {
-        return Err(ErrorCode::InvalidTokenAccountDelegation.into());
-    }
-
-    // check if listing is already closed
-    if listing_account.close_date > Some(0)
-        || !listing_account.is_active
-        || listing_account.sold.is_some()
-    {
-        return Err(ErrorCode::ListingAlreadyClosed.into());
-    }
+    check_listing_closing(
+        &ctx.accounts.closer,
+        &listing_account.seller.clone(),
+        listing_account.close_date,
+        listing_account.is_active,
+        listing_account.sold,
+    )?;
 
     let mut sold = false;
 
-    //TODO: setup a case for the nft is not available to transfer
-
+    //TODO: setup a case to close if the nft is not available to transfer
     // if the Auction has a highest bid we use that transfer the the nft
     if listing_account.highest_bid_pda.is_some() && listing_account.highest_bidder.is_some() {
-        let bidder_token = associated_token::get_associated_token_address(
-            &listing_account.highest_bidder.unwrap().key(),
-            &listing_account.mint.key(),
-        );
+        check_token_owner_and_delegation(&ctx.accounts.seller_token, &nft_listing.key())?;
 
-        if bidder_token.key() != ctx.accounts.bidder_token.key()
-            || ctx.accounts.bidder_token.key()
-                != listing_account.highest_bidder_token.unwrap().key()
-        {
+        //check bidder token match
+        check_token_owner(
+            &listing_account.highest_bidder.unwrap().key(),
+            &ctx.accounts.bidder_token,
+            &listing_account.mint.key(),
+        )?;
+
+        if listing_account.highest_bidder_token.unwrap().key() != ctx.accounts.bidder_token.key() {
             return Err(ErrorCode::InvalidTokenAccount.into());
         }
         token::transfer(
@@ -102,7 +78,7 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
     token::revoke(CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
         token::Revoke {
-            authority: ctx.accounts.seller.to_account_info(),
+            authority: nft_listing.to_account_info(),
             source: ctx.accounts.seller_token.to_account_info(),
         },
     ))?;
@@ -111,7 +87,7 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
     nft_listing_account.active = false;
     nft_listing_account.listing = None;
 
-    // // close the fixed price listing pda
+    // close the fixed price listing pda
     listing_account.close_date = Some(Clock::get().unwrap().unix_timestamp as u64);
     listing_account.is_active = false;
     listing_account.sold = Some(sold);
@@ -122,12 +98,11 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
 #[derive(Accounts)]
 pub struct CloseEnglishAuctionListing<'info> {
     #[account(mut)]
-    pub seller: Signer<'info>,
+    pub closer: Signer<'info>,
     #[account(mut)]
     pub seller_token: Account<'info, token::TokenAccount>,
     #[account(mut)]
-    /// CHECK: Checked under transfer
-    pub bidder_token: UncheckedAccount<'info>,
+    pub bidder_token: Account<'info, token::TokenAccount>,
     #[account(mut)]
     pub nft_listing_account: Account<'info, NftListingData>,
     #[account(mut)]

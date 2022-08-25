@@ -18,7 +18,9 @@ test-auction-listing = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/li
 test-auction-listingPda = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/listingPda.ts"
 test-auction-nftListing = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/nftListing.ts"
 test-auction-withdraw = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/withdraw.ts"
+
 test-nftToken = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/nftToken.ts"
+test-nftTransfer = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/nftTransfer.ts"
 
 test-fixed-buy = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/fixed/buy.ts"
 test-fixed-close = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/fixed/close.ts"

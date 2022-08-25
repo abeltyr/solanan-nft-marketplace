@@ -1,11 +1,11 @@
 use {anchor_lang::prelude::*, anchor_spl::token};
 
-use crate::error::ErrorCode::{
-    InvalidTokenAccountDelegation, ListingAlreadyClosed, ListingEnded, ListingNotActivate,
-    ListingNotStarted,
+use crate::{
+    error::ErrorCode::{ListingAlreadyClosed, ListingEnded, ListingNotActivate, ListingNotStarted},
+    validate::check_token_owner_and_delegation::*,
 };
 
-pub fn check_active_listing<'info>(
+pub fn check_active_listing_data<'info>(
     start_date: Option<u64>,
     end_date: Option<u64>,
     close_date: Option<u64>,
@@ -41,14 +41,7 @@ pub fn check_active_listing<'info>(
         return Err(ListingEnded.into());
     }
 
-    // check the given token address has access to the nft and that it has given delegation authority
-    if seller_token.delegate.is_none()
-        || seller_token.delegate.unwrap() != nft_listing.key()
-        || seller_token.delegated_amount != 100000000
-        || seller_token.amount != 1
-    {
-        return Err(InvalidTokenAccountDelegation.into());
-    }
+    check_token_owner_and_delegation(&seller_token, &nft_listing.key())?;
 
     Ok(())
 }

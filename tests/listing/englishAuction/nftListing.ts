@@ -39,7 +39,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "DuBRzpzHJjv8FpJGMuvHi7vDHSFaziFhKvqxK7iWNSPo",
+      "HnSYLugfMv9whiaHGabJnRNccYqEDBckGhPYzrNLCxRt",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(

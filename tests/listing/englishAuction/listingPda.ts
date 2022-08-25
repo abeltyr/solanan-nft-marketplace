@@ -40,7 +40,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "DuBRzpzHJjv8FpJGMuvHi7vDHSFaziFhKvqxK7iWNSPo",
+      "HnSYLugfMv9whiaHGabJnRNccYqEDBckGhPYzrNLCxRt",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -84,14 +84,14 @@ describe("english auction", () => {
 
     listingPda = listing[0];
   });
-  it("Fail Create Listing Pda by owner issue", async () => {
+  it("Fail Create Listing Pda by the token account miss match", async () => {
     console.log(
-      "Fail Creating a second Listing Pda with owner issue --------------------------------------------------------------------",
+      "Fail Creating a second Listing Pda with the token account miss match --------------------------------------------------------------------",
     );
 
     try {
       let transaction = await program.methods
-        .createFixedPriceListingPda()
+        .createEnglishAuctionListingPda()
         .accounts({
           seller: buyer.publicKey,
           sellerToken: buyerTokenAddress,
@@ -103,18 +103,18 @@ describe("english auction", () => {
 
       assert.isNull(transaction);
     } catch (e) {
-      console.log(e.logs);
+      console.log(e.error);
       assert.isNotNull(e);
     }
   });
-  it("Fail Create Listing Pda by the token account miss match", async () => {
+  it("Fail Create Listing Pda by owner issue", async () => {
     console.log(
-      "Fail Creating a second Listing Pda with the token account miss match --------------------------------------------------------------------",
+      "Fail Creating a second Listing Pda with owner issue --------------------------------------------------------------------",
     );
 
     try {
       let transaction = await program.methods
-        .createFixedPriceListingPda()
+        .createEnglishAuctionListingPda()
         .accounts({
           seller: buyer.publicKey,
           sellerToken: ownerTokenAddress,
@@ -126,7 +126,7 @@ describe("english auction", () => {
 
       assert.isNull(transaction);
     } catch (e) {
-      console.log(e.logs);
+      console.log(e.error);
       assert.isNotNull(e);
     }
   });

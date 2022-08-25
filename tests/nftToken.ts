@@ -1,3 +1,4 @@
+import * as anchor from "@project-serum/anchor";
 import {
   clusterApiUrl,
   Connection,
@@ -5,6 +6,7 @@ import {
   Transaction,
   sendAndConfirmTransaction,
 } from "@solana/web3.js";
+import { Listings } from "../target/types/listings";
 import {
   createMint,
   getMint,
@@ -19,6 +21,9 @@ import {
 import * as mpl from "@metaplex-foundation/mpl-token-metadata";
 
 describe("Mint the Nft", async () => {
+  anchor.setProvider(anchor.AnchorProvider.env());
+  const program = anchor.workspace.Listings as anchor.Program<Listings>;
+
   let connection;
   let payer;
 
@@ -60,13 +65,35 @@ describe("Mint the Nft", async () => {
     const tokenAccountInfo = await getAccount(connection, tokenAccount.address);
 
     console.log(tokenAccountInfo.amount);
+    let findNftPda = await anchor.web3.PublicKey.findProgramAddress(
+      [mint.toBuffer(), Buffer.from("_nft_listing_data")],
+      program.programId,
+    );
+
+    const nftPda = findNftPda[0];
+    // create the nft listing
+    console.log(nftPda.toString());
+    try {
+      let transaction = await program.methods
+        .createNftListingPda()
+        .accounts({
+          mint: mint,
+          owner: payer.publicKey,
+          nftListingAccount: nftPda,
+        })
+        .signers([payer])
+        .rpc();
+      console.log("Your transaction signature", transaction);
+    } catch (e) {
+      console.log("Nft Pda Exist", e);
+    }
 
     await mintTo(
       connection,
       payer,
       mint,
       tokenAccount.address,
-      payer,
+      nftPda,
       1, // because decimals for the mint are set to 0
     );
 
@@ -81,51 +108,51 @@ describe("Mint the Nft", async () => {
       uses: null,
     } as mpl.DataV2;
 
-    //metadata account associated with mint
-    const metadataPDA = await findMetadataPda(mint);
+    /// metadata account associated with mint
+    // const metadataPDA = await findMetadataPda(mint);
 
-    console.log("Metadata initialized", metadataPDA.toString());
+    // console.log("Metadata initialized", metadataPDA.toString());
 
-    let metadataTransaction = new Transaction().add(
-      mpl.createCreateMetadataAccountV2Instruction(
-        {
-          metadata: metadataPDA,
-          mint: mint,
-          mintAuthority: payer.publicKey,
-          updateAuthority: payer.publicKey,
-          payer: payer.publicKey,
-        },
-        {
-          createMetadataAccountArgsV2: {
-            isMutable: false,
-            data: ON_CHAIN_METADATA,
-          },
-        },
-      ),
-    );
+    // let metadataTransaction = new Transaction().add(
+    //   mpl.createCreateMetadataAccountV2Instruction(
+    //     {
+    //       metadata: metadataPDA,
+    //       mint: mint,
+    //       mintAuthority: payer.publicKey,
+    //       updateAuthority: payer.publicKey,
+    //       payer: payer.publicKey,
+    //     },
+    //     {
+    //       createMetadataAccountArgsV2: {
+    //         isMutable: false,
+    //         data: ON_CHAIN_METADATA,
+    //       },
+    //     },
+    //   ),
+    // );
 
-    await sendAndConfirmTransaction(connection, metadataTransaction, [payer]);
+    // await sendAndConfirmTransaction(connection, metadataTransaction, [payer]);
 
-    const masterEditionPda = await findMasterEditionV2Pda(mint);
-    let masterTransaction = new Transaction().add(
-      mpl.createCreateMasterEditionV3Instruction(
-        {
-          edition: masterEditionPda,
-          metadata: metadataPDA,
-          mint: mint,
-          mintAuthority: payer.publicKey,
-          updateAuthority: payer.publicKey,
-          payer: payer.publicKey,
-        },
-        {
-          createMasterEditionArgs: {
-            maxSupply: 0,
-          },
-        },
-      ),
-    );
+    // const masterEditionPda = await findMasterEditionV2Pda(mint);
+    // let masterTransaction = new Transaction().add(
+    //   mpl.createCreateMasterEditionV3Instruction(
+    //     {
+    //       edition: masterEditionPda,
+    //       metadata: metadataPDA,
+    //       mint: mint,
+    //       mintAuthority: payer.publicKey,
+    //       updateAuthority: payer.publicKey,
+    //       payer: payer.publicKey,
+    //     },
+    //     {
+    //       createMasterEditionArgs: {
+    //         maxSupply: 0,
+    //       },
+    //     },
+    //   ),
+    // );
 
-    await sendAndConfirmTransaction(connection, masterTransaction, [payer]);
+    // await sendAndConfirmTransaction(connection, masterTransaction, [payer]);
 
     // The metaplex metadata make max supply to to limit the supply if that is not set
     // an Alternative would be freezing the mint after the first mint

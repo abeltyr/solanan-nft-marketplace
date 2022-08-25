@@ -1,13 +1,13 @@
 use {
     anchor_lang::{prelude::*, system_program},
-    anchor_spl::{associated_token, token},
+    anchor_spl::token,
 };
 
 use crate::{
     error::ErrorCode,
     processor::fixed_price_listing::utils::create_fixed_price_listing_pda::*,
     utils::create_nft_listing_pda::*,
-    validate::{check_active_listing::*, check_listing_is_active::*},
+    validate::{check_active_listing_data::*, check_listing_is_active::*, check_token_owner::*},
 };
 pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> Result<()> {
     msg!("Buy The Nft...");
@@ -20,8 +20,6 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
 
     let listing_account = &mut ctx.accounts.listing_account;
 
-    // validate the nft listing account and check if active
-
     let nft_listing_pda = check_listing_is_active(
         &ctx.program_id,
         &listing_account.mint,
@@ -31,7 +29,7 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
 
     let bump_seed = nft_listing_pda.1;
 
-    check_active_listing(
+    check_active_listing_data(
         listing_account.start_date,
         listing_account.end_date,
         listing_account.close_date,
@@ -46,22 +44,19 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
         return Err(ErrorCode::SellerInvalidData.into());
     }
 
-    let seller_token = associated_token::get_associated_token_address(
-        &listing_account.seller.key(),
+    //check seller token match
+    check_token_owner(
+        &listing_account.seller,
+        &ctx.accounts.seller_token,
         &listing_account.mint.key(),
-    );
+    )?;
 
-    let buyer_token = associated_token::get_associated_token_address(
+    //check buyer token match
+    check_token_owner(
         &ctx.accounts.buyer.key(),
+        &ctx.accounts.buyer_token,
         &listing_account.mint.key(),
-    );
-
-    // check the given token address match and has the proper authority
-    if seller_token.key() != ctx.accounts.seller_token.key()
-        || buyer_token.key() != ctx.accounts.buyer_token.key()
-    {
-        return Err(ErrorCode::InvalidTokenAccount.into());
-    }
+    )?;
 
     // transfer the fund
     system_program::transfer(
@@ -105,7 +100,7 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
     listing_account.close_date = Some(Clock::get().unwrap().unix_timestamp as u64);
     listing_account.sold = Some(true);
     listing_account.is_active = false;
-    listing_account.buyer_token = Some(buyer_token.key());
+    listing_account.buyer_token = Some(ctx.accounts.buyer_token.key());
 
     Ok(())
 }

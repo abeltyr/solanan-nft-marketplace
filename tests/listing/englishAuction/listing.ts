@@ -40,7 +40,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "DuBRzpzHJjv8FpJGMuvHi7vDHSFaziFhKvqxK7iWNSPo",
+      "HnSYLugfMv9whiaHGabJnRNccYqEDBckGhPYzrNLCxRt",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -69,24 +69,6 @@ describe("english auction", () => {
     );
 
     nftPda = findNftPda[0];
-    // create the nft listing
-    try {
-      let transaction = await program.methods
-        .createNftListingPda()
-        .accounts({
-          mint: mint,
-          owner: payer.publicKey,
-          nftListingAccount: nftPda,
-        })
-        .signers([payer])
-        .rpc();
-      console.log("Your transaction signature", transaction);
-    } catch (e) {
-      console.log(
-        "Nft Pda Exist",
-        // e
-      );
-    }
   });
   it("Create Listing Pda", async () => {
     console.log(

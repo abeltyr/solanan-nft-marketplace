@@ -4,11 +4,12 @@ use {
 };
 
 use crate::{
-    error::ErrorCode::{
-        InvalidTokenAccount, InvalidTokenAccountDelegation, NftNotListed, SellerBidIssue,
-    },
+    error::ErrorCode::SellerBidIssue,
     processor::english_auction_listing::utils::create_english_auction_listing_pda::*,
     utils::create_nft_listing_pda::*,
+    validate::{
+        check_listing_is_active::*, check_nft_owner::*, check_token_owner_and_delegation::*,
+    },
 };
 
 pub fn create_english_auction_bid_pda_fn(ctx: Context<CreateEnglishAuctionBidPda>) -> Result<()> {
@@ -20,36 +21,24 @@ pub fn create_english_auction_bid_pda_fn(ctx: Context<CreateEnglishAuctionBidPda
 
     let listing_account = &mut ctx.accounts.listing_account;
 
-    // check is the nft listing is active
-    if !nft_listing_account.active || !listing_account.is_active {
-        return Err(NftNotListed.into());
-    }
-
-    let bid_account = &mut ctx.accounts.bid_account;
-    let listing_account = &mut ctx.accounts.listing_account;
-
     if ctx.accounts.bidder.key() == listing_account.seller.key() {
         return Err(SellerBidIssue.into());
     }
-    // validate so that the seller can distribute
 
-    let seller_token = associated_token::get_associated_token_address(
+    check_listing_is_active(
+        &ctx.program_id,
+        &listing_account.mint,
+        listing_account.is_active,
+        &nft_listing_account,
+    )?;
+
+    check_token_owner_and_delegation(&ctx.accounts.seller_token, &nft_listing.key())?;
+
+    check_nft_owner(
         &listing_account.seller.clone(),
-        &listing_account.mint.clone(),
-    );
-
-    if seller_token.key() != ctx.accounts.seller_token.key() {
-        return Err(InvalidTokenAccount.into());
-    }
-
-    // validate if the token is still under the owner by the token account
-    if ctx.accounts.seller_token.delegate.is_none()
-        || ctx.accounts.seller_token.delegate.unwrap() != nft_listing.key()
-        || ctx.accounts.seller_token.delegated_amount != 100000000
-        || ctx.accounts.seller_token.amount != 1
-    {
-        return Err(InvalidTokenAccountDelegation.into());
-    }
+        &ctx.accounts.seller_token,
+        nft_listing_account,
+    )?;
 
     // fetch token account of the bidder
     let bidder_token = associated_token::get_associated_token_address(
@@ -58,6 +47,7 @@ pub fn create_english_auction_bid_pda_fn(ctx: Context<CreateEnglishAuctionBidPda
     );
 
     // update the bid data
+    let bid_account = &mut ctx.accounts.bid_account;
     bid_account.listing_account = ctx.accounts.listing_account.key();
     bid_account.bidder = ctx.accounts.bidder.key();
     bid_account.bidder_token = bidder_token.key();

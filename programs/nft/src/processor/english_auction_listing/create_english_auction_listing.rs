@@ -3,7 +3,7 @@ use {anchor_lang::prelude::*, anchor_spl::token};
 use crate::{
     processor::english_auction_listing::utils::create_english_auction_listing_pda::*,
     utils::create_nft_listing_pda::*,
-    validate::{check_listing_data::*, check_listing_is_not_active::*, check_nft_owner::*},
+    validate::{check_listing_input::*, check_listing_is_not_active::*, check_nft_owner::*},
 };
 
 pub fn create_english_auction_listing_fn(
@@ -38,7 +38,7 @@ pub fn create_english_auction_listing_fn(
     )?;
 
     //validate the listing data
-    check_listing_data(
+    check_listing_input(
         start_date,
         end_date,
         listing_account.close_date,

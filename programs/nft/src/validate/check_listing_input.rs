@@ -5,7 +5,7 @@ use crate::error::ErrorCode::{
     StartDateIsInPast,
 };
 
-pub fn check_listing_data<'info>(
+pub fn check_listing_input<'info>(
     start_date: u64,
     end_date: u64,
     close_date: Option<u64>,

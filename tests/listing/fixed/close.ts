@@ -38,7 +38,7 @@ describe("listings", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "DuBRzpzHJjv8FpJGMuvHi7vDHSFaziFhKvqxK7iWNSPo",
+      "HnSYLugfMv9whiaHGabJnRNccYqEDBckGhPYzrNLCxRt",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -98,17 +98,17 @@ describe("listings", () => {
         .accounts({
           nftListingAccount: nftPda,
           listingAccount: listingPda,
-          seller: payer.publicKey,
+          closer: payer.publicKey,
           sellerToken: ownerTokenAddress,
         })
         .signers([payer])
         .rpc();
       console.log("Your transaction signature", transaction);
-      const listingData = await program.account.fixedPriceListingData.fetch(
-        listingPda,
-      );
-      const nftData = await program.account.nftListingData.fetch(nftPda);
-      console.log({ listingData, nftData });
+      // const listingData = await program.account.fixedPriceListingData.fetch(
+      //   listingPda,
+      // );
+      // const nftData = await program.account.nftListingData.fetch(nftPda);
+      // console.log({ listingData, nftData });
     } catch (e) {
       console.log("error", e);
     }
