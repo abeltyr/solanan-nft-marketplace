@@ -97,7 +97,10 @@ pub enum ErrorCode {
     // 5029
     #[msg("The starting price must be higher than zero")]
     PriceIssue,
-    // 5029
+    // 5030
     #[msg("Double withdrawal attempted")]
     DoubleWithdrawIssue,
+    // 5031
+    #[msg("The provided nft authority isn't valid")]
+    NftAuthorityInvalidData,
 }

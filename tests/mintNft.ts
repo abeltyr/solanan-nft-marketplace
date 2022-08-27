@@ -8,9 +8,15 @@ import {
   getOrCreateAssociatedTokenAccount,
   getAccount,
 } from "@solana/spl-token";
-import { clusterApiUrl, Connection } from "@solana/web3.js";
+import {
+  clusterApiUrl,
+  Connection,
+  sendAndConfirmTransaction,
+  Transaction,
+} from "@solana/web3.js";
 import { assert } from "chai";
 import { Listings } from "../target/types/listings";
+import * as mpl from "@metaplex-foundation/mpl-token-metadata";
 
 describe("listings", () => {
   // Configure the client to use the local cluster.
@@ -22,7 +28,7 @@ describe("listings", () => {
   let connection: anchor.web3.Connection;
   let tokenAddress: anchor.web3.PublicKey;
   let buyerTokenAddress: anchor.web3.PublicKey;
-  let nftPda;
+  let nftOwnerPda;
   let listingPda;
   let programAccount: anchor.web3.Keypair;
   const program = anchor.workspace.Listings as Program<Listings>;
@@ -44,7 +50,31 @@ describe("listings", () => {
   });
   it("mint Nft Pda ", async () => {
     mint = anchor.web3.Keypair.generate();
-    console.log(`New token: ${mint.publicKey}`);
+    console.log(`mint: ${mint.publicKey}`);
+
+    let findNftPda = await anchor.web3.PublicKey.findProgramAddress(
+      [mint.publicKey.toBuffer(), Buffer.from("_authority_")],
+      program.programId,
+    );
+
+    nftOwnerPda = findNftPda[0];
+
+    console.log(`nftOwnerPda: ${nftOwnerPda.toString()}`);
+    // // create the nft listing
+    // try {
+    //   let transaction = await program.methods
+    //     .createNftAuthorityPda()
+    //     .accounts({
+    //       mint: mint.publicKey,
+    //       owner: payer.publicKey,
+    //       nftAuthorityAccount: nftOwnerPda,
+    //     })
+    //     .signers([payer])
+    //     .rpc();
+    //   console.log("Your transaction signature", transaction);
+    // } catch (e) {
+    //   console.log("Nft Pda Exist", e);
+    // }
 
     tokenAddress = await anchor.utils.token.associatedAddress({
       mint: mint.publicKey,
@@ -60,6 +90,7 @@ describe("listings", () => {
           mint: mint.publicKey,
           tokenAccount: tokenAddress,
           mintAuthority: payer.publicKey,
+          nftAuthorityAccount: nftOwnerPda,
         })
         .signers([mint])
         .rpc();
@@ -67,31 +98,7 @@ describe("listings", () => {
       console.log(e);
     }
   });
-  it.skip("setup Nft metadata Pda ", async () => {
-    let findNftPda = await anchor.web3.PublicKey.findProgramAddress(
-      [mint.publicKey.toBuffer(), Buffer.from("_nft_listing_data")],
-      program.programId,
-    );
-
-    const nftPda = findNftPda[0];
-
-    // create the nft listing
-    try {
-      let transaction = await program.methods
-        .createNftListingPda()
-        .accounts({
-          mint: mint.publicKey,
-          owner: payer.publicKey,
-          nftListingAccount: nftPda,
-        })
-        .signers([payer])
-        .rpc();
-      console.log("Your transaction signature", transaction);
-    } catch (e) {
-      console.log("Nft Pda Exist", e);
-    }
-
-    /// metadata account associated with mint
+  it("setup Nft metadata Pda ", async () => {
     const metadataPDA = await findMetadataPda(mint.publicKey);
 
     console.log("Metadata initialized", metadataPDA.toString());
@@ -113,7 +120,7 @@ describe("listings", () => {
           tokenAccount: tokenAddress,
           mintAuthority: payer.publicKey,
           tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-          nftListingAccount: nftPda,
+          nftAuthorityAccount: nftOwnerPda,
         })
         .signers([mint])
         .rpc();

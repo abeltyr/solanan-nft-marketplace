@@ -15,6 +15,7 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
     msg!("Closing The English Auction Listing...");
 
     let nft_listing = &ctx.accounts.nft_listing_account.to_account_info();
+    let nft_authority = &ctx.accounts.nft_authority_account.to_account_info();
 
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
     let listing_account = &mut ctx.accounts.listing_account;
@@ -45,6 +46,7 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
     if listing_account.highest_bid_pda.is_some() && listing_account.highest_bidder.is_some() {
         check_token_owner_and_delegation(&ctx.accounts.seller_token, &nft_listing.key())?;
 
+        msg!("In Here");
         //check bidder token match
         check_token_owner(
             &listing_account.highest_bidder.unwrap().key(),
@@ -75,20 +77,22 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
         listing_account.nft_transferred = true;
         sold = true;
     }
+    msg!("nft_authority {:?}", nft_authority);
+    msg!(
+        "nft_listing_account.mint.key() {:?}",
+        nft_listing_account.mint.key()
+    );
 
-    // revoke program nft id
-    token::revoke(CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        token::Revoke {
-            authority: nft_listing.to_account_info(),
-            source: ctx.accounts.seller_token.to_account_info(),
-        },
-        &[&[
-            listing_account.mint.key().as_ref(),
-            b"_nft_listing_data",
-            &[bump_seed],
-        ]],
-    ))?;
+    if ctx.accounts.closer.key() == listing_account.seller {
+        // revoke program token id
+        token::revoke(CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            token::Revoke {
+                authority: ctx.accounts.closer.to_account_info(),
+                source: ctx.accounts.seller_token.to_account_info(),
+            },
+        ))?;
+    }
 
     // update the nft listing pda
     nft_listing_account.active = false;
@@ -116,4 +120,7 @@ pub struct CloseEnglishAuctionListing<'info> {
     pub listing_account: Account<'info, EnglishAuctionListingData>,
     pub token_program: Program<'info, token::Token>,
     pub system_program: Program<'info, System>,
+    #[account(mut)]
+    /// CHECK:
+    pub nft_authority_account: UncheckedAccount<'info>,
 }

@@ -3,9 +3,19 @@ use {
     anchor_spl::{associated_token, token},
 };
 
+use crate::validate::check_nft_authority_relation::*;
+
 pub fn mint_nft_fn(ctx: Context<MintNft>) -> Result<()> {
     msg!("Creating mint account...");
     msg!("Mint: {}", &ctx.accounts.mint.key());
+
+    let nft_listing_pda = check_nft_authority_relation(
+        ctx.program_id,
+        &ctx.accounts.mint.key(),
+        &ctx.accounts.nft_authority_account,
+    );
+
+    let bump_seed: u8 = nft_listing_pda.unwrap().1;
 
     system_program::create_account(
         CpiContext::new(
@@ -31,8 +41,8 @@ pub fn mint_nft_fn(ctx: Context<MintNft>) -> Result<()> {
             },
         ),
         0,
-        &ctx.accounts.mint_authority.key(),
-        Some(&ctx.accounts.mint_authority.key()),
+        &ctx.accounts.nft_authority_account.key(),
+        Some(&ctx.accounts.nft_authority_account.key()),
     )?;
 
     msg!("Creating token account...");
@@ -54,13 +64,18 @@ pub fn mint_nft_fn(ctx: Context<MintNft>) -> Result<()> {
     msg!("Mint: {}", &ctx.accounts.mint.to_account_info().key());
     msg!("Token Address: {}", &ctx.accounts.token_account.key());
     token::mint_to(
-        CpiContext::new(
+        CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             token::MintTo {
                 mint: ctx.accounts.mint.to_account_info(),
                 to: ctx.accounts.token_account.to_account_info(),
-                authority: ctx.accounts.mint_authority.to_account_info(),
+                authority: ctx.accounts.nft_authority_account.to_account_info(),
             },
+            &[&[
+                ctx.accounts.mint.key().as_ref(),
+                b"_authority_",
+                &[bump_seed],
+            ]],
         ),
         1,
     )?;
@@ -83,4 +98,16 @@ pub struct MintNft<'info> {
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, token::Token>,
     pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
+    #[account(
+        init,
+        payer = mint_authority,
+        space = 0,
+        seeds = [
+            mint.key().as_ref(),
+            b"_authority_",
+        ],
+        bump
+    )]
+    /// CHECK:
+    pub nft_authority_account: UncheckedAccount<'info>,
 }

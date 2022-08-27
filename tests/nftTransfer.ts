@@ -24,7 +24,7 @@ describe("Mint the Nft", async () => {
     buyer = anchor.web3.Keypair.fromSecretKey(secretKey);
 
     const mint = new anchor.web3.PublicKey(
-      "HnSYLugfMv9whiaHGabJnRNccYqEDBckGhPYzrNLCxRt",
+      "Gcfx17cZF6pniqKPzfwXtdHShZvZ9urnTQ6sMJ8Yx9Hm",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
