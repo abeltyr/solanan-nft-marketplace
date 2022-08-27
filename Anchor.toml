@@ -1,13 +1,13 @@
 [features]
 seeds = false
-[programs.devnet]
-listings = "9otEc69qDRHTpEiS64kqm41tFRAqXSJZt4c8aN3kDEy1"
+[programs.localnet]
+listings = "WVXjV3GziXiYjAyZJGsUdaW7RLmEeL5h57BzbvJdh2A"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "/home/av/.config/solana/id.json"
 
 [scripts]

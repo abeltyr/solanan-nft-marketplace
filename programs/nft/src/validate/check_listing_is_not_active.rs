@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
 
 use crate::{
-    error::ErrorCode, utils::create_nft_listing_pda::*, validate::check_nft_listing_relation::*,
+    error::ErrorCode, processor::nft_mint::utils::create_nft_listing_pda::*,
+    validate::check_nft_listing_relation::*,
 };
 
 pub fn check_listing_is_not_active<'info>(

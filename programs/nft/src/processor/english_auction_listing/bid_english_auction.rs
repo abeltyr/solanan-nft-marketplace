@@ -5,10 +5,12 @@ use {
 
 use crate::{
     error::ErrorCode,
-    processor::english_auction_listing::utils::{
-        create_english_auction_bid_pda::*, create_english_auction_listing_pda::*,
+    processor::{
+        english_auction_listing::utils::{
+            create_english_auction_bid_pda::*, create_english_auction_listing_pda::*,
+        },
+        nft_mint::utils::create_nft_listing_pda::*,
     },
-    utils::create_nft_listing_pda::*,
     validate::{
         check_active_listing_data::*, check_listing_is_active::*, check_nft_owner::*,
         check_token_owner::*,

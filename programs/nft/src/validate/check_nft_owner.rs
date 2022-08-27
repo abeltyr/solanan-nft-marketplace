@@ -1,7 +1,7 @@
 use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
-    error::ErrorCode::MintTokenIssue, utils::create_nft_listing_pda::*,
+    error::ErrorCode::MintTokenIssue, processor::nft_mint::utils::create_nft_listing_pda::*,
     validate::check_token_owner::*,
 };
 

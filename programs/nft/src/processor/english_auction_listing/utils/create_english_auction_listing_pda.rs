@@ -1,7 +1,7 @@
 use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
-    error::ErrorCode::NftAlreadyListed, utils::create_nft_listing_pda::*,
+    error::ErrorCode::NftAlreadyListed, processor::nft_mint::utils::create_nft_listing_pda::*,
     validate::check_nft_owner::*,
 };
 
