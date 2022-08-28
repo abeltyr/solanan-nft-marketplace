@@ -5,7 +5,7 @@ use {
 
 use crate::{
     error::ErrorCode,
-    processor::{fixed_price_listing::utils::create_fixed_price_listing_pda::*, nft::mint_nft::*},
+    processor::{fixed_price_listing::create_fixed_price_listing::*, nft::mint_nft::*},
     validate::{check_active_listing_data::*, check_listing_is_active::*, check_token_owner::*},
 };
 pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> Result<()> {

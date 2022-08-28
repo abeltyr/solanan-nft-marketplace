@@ -1,8 +1,9 @@
 use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
-    processor::{fixed_price_listing::utils::create_fixed_price_listing_pda::*, nft::mint_nft::*},
-    validate::{check_listing_input::*, check_listing_is_not_active::*, check_nft_owner::*},
+    error::ErrorCode::NftAlreadyListed,
+    processor::nft::mint_nft::*,
+    validate::{check_listing_input::*, check_nft_owner::*},
 };
 
 pub fn create_fixed_price_listing_fn(
@@ -17,15 +18,15 @@ pub fn create_fixed_price_listing_fn(
     let nft_listing = &ctx.accounts.nft_listing_account.to_account_info();
 
     let nft_listing_account = &mut ctx.accounts.nft_listing_account;
+
     let listing_account = &mut ctx.accounts.listing_account;
 
-    // validate the nft listing account and check if active
-    check_listing_is_not_active(
-        &ctx.program_id,
-        &listing_account.mint,
-        listing_account.is_active,
-        &nft_listing_account,
-    )?;
+    msg!("nft_listing {:?}", nft_listing);
+
+    // check if the nft is not already listed before creating the PDA
+    if nft_listing_account.active {
+        return Err(NftAlreadyListed.into());
+    }
 
     // fetch token account of the seller and check owner
     check_nft_owner(
@@ -35,14 +36,7 @@ pub fn create_fixed_price_listing_fn(
     )?;
 
     //validate the listing data
-    check_listing_input(
-        start_date,
-        end_date,
-        listing_account.close_date,
-        price_lamports,
-        &ctx.accounts.seller,
-        &listing_account.seller,
-    )?;
+    check_listing_input(start_date, end_date, price_lamports)?;
 
     // delegate the nft to a new a PDA
     token::approve(
@@ -58,9 +52,13 @@ pub fn create_fixed_price_listing_fn(
     )?;
 
     // update the listing data
+    listing_account.seller = ctx.accounts.seller.key();
+    listing_account.seller_token = ctx.accounts.seller_token.key();
+    listing_account.mint = nft_listing_account.mint;
     listing_account.price_lamports = price_lamports;
     listing_account.start_date = Some(start_date);
     listing_account.end_date = Some(end_date);
+    listing_account.close_date = Some(0);
     listing_account.is_active = true;
 
     // update the nft listing data
@@ -76,11 +74,38 @@ pub struct CreateFixedPriceListing<'info> {
     #[account(mut)]
     pub nft_listing_account: Account<'info, NftListingData>,
     #[account(mut)]
-    pub listing_account: Account<'info, FixedPriceListingData>,
-    #[account(mut)]
     pub seller: Signer<'info>,
     #[account(mut)]
     pub seller_token: Account<'info, token::TokenAccount>,
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, token::Token>,
+    #[account(
+        init,
+        payer = seller,
+        space = 250,
+        seeds = [
+            nft_listing_account.key().as_ref(),
+            b"_Fixed_Price_",
+            nft_listing_account.amount.to_string().as_ref(),
+        ],
+        bump
+    )]
+    pub listing_account: Account<'info, FixedPriceListingData>,
+}
+
+#[account]
+#[derive(Default)]
+pub struct FixedPriceListingData {
+    pub mint: Pubkey,
+    pub seller: Pubkey,
+    pub seller_token: Pubkey,
+    pub buyer: Option<Pubkey>,
+    pub buyer_token: Option<Pubkey>,
+    pub price_lamports: u64,
+    pub start_date: Option<u64>,
+    pub end_date: Option<u64>,
+    pub close_date: Option<u64>,
+    pub sold: Option<bool>,
+    pub is_active: bool,
+    pub fund_sent: Option<bool>,
 }

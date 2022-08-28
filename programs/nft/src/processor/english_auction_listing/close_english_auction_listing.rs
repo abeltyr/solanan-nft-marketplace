@@ -45,7 +45,6 @@ pub fn close_english_auction_listing_fn(ctx: Context<CloseEnglishAuctionListing>
     if listing_account.highest_bid_pda.is_some() && listing_account.highest_bidder.is_some() {
         check_token_owner_and_delegation(&ctx.accounts.seller_token, &nft_listing.key())?;
 
-        msg!("In Here");
         //check bidder token match
         check_token_owner(
             &listing_account.highest_bidder.unwrap().key(),

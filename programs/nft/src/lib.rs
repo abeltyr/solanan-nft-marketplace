@@ -15,13 +15,12 @@ use crate::processor::{
         withdraw_bid_english_auction::*,
     },
     fixed_price_listing::{
-        buy_nft_fixed_price_listing::*, close_fixed_price_listing::*,
-        create_fixed_price_listing::*, utils::create_fixed_price_listing_pda::*,
+        buy_nft_fixed_price_listing::*, close_fixed_price_listing::*, create_fixed_price_listing::*,
     },
     nft::{mint_nft::*, setup_nft_metadata::*},
 };
 
-declare_id!("WVXjV3GziXiYjAyZJGsUdaW7RLmEeL5h57BzbvJdh2A");
+declare_id!("BunPDquq7AxQsF3uxfGmNp6HQQ1rvAHw34RUQx5wa4C3");
 
 #[program]
 pub mod listings {
@@ -34,10 +33,6 @@ pub mod listings {
         price_lamports: u64,
     ) -> Result<()> {
         create_fixed_price_listing_fn(ctx, start_date, end_date, price_lamports)
-    }
-
-    pub fn create_fixed_price_listing_pda(ctx: Context<CreateFixedPriceListingPda>) -> Result<()> {
-        create_fixed_price_listing_pda_fn(ctx)
     }
 
     pub fn close_fixed_price_listing(ctx: Context<CloseFixedPriceListing>) -> Result<()> {

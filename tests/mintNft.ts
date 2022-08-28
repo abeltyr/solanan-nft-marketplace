@@ -87,6 +87,7 @@ describe("listings", () => {
         })
         .signers([mint])
         .rpc();
+      console.log(await program.account.nftListingData.fetch(nftPda));
     } catch (e) {
       console.log(e);
     }

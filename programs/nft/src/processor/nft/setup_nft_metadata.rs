@@ -13,10 +13,6 @@ pub fn setup_nft_metadata_fn(
     metadata_uri: String,
 ) -> Result<()> {
     msg!("Creating metadata account...");
-    msg!(
-        "Metadata account address: {}",
-        &ctx.accounts.metadata.to_account_info().key()
-    );
 
     let nft_listing_pda = check_nft_authority_relation(
         ctx.program_id,
@@ -59,10 +55,7 @@ pub fn setup_nft_metadata_fn(
     )?;
 
     msg!("Creating master edition metadata account...");
-    msg!(
-        "Master edition metadata account address: {}",
-        &ctx.accounts.master_edition.to_account_info().key()
-    );
+
     program::invoke_signed(
         &token_instruction::create_master_edition_v3(
             TOKEN_METADATA_ID,
@@ -89,8 +82,6 @@ pub fn setup_nft_metadata_fn(
             &[bump_seed],
         ]],
     )?;
-
-    msg!("Token mint process completed successfully.");
 
     Ok(())
 }

@@ -39,14 +39,7 @@ pub fn create_english_auction_listing_fn(
     )?;
 
     //validate the listing data
-    check_listing_input(
-        start_date,
-        end_date,
-        listing_account.close_date,
-        starting_price_lamports,
-        &ctx.accounts.seller,
-        &listing_account.seller,
-    )?;
+    check_listing_input(start_date, end_date, starting_price_lamports)?;
 
     // approve the nft
     token::approve(

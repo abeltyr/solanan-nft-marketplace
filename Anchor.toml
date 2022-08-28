@@ -1,14 +1,14 @@
 [features]
 seeds = false
 [programs.devnet]
-listings = "WVXjV3GziXiYjAyZJGsUdaW7RLmEeL5h57BzbvJdh2A"
+listings = "BunPDquq7AxQsF3uxfGmNp6HQQ1rvAHw34RUQx5wa4C3"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "devnet"
-wallet = "/home/av/.config/solana/id.json"
+wallet = "/home/av/Documents/work/notMi/memusic/memusicNft/tests/keypairs/second.json"
 
 [scripts]
 test-auction-bid = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/bid.ts"
