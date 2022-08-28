@@ -65,6 +65,7 @@ pub fn withdraw_bid_english_auction_fn(ctx: Context<WithdrawBidEnglishAuction>) 
         return Err(ErrorCode::SellerWithdrawIssue.into());
     }
 
+    // check if the seller is withdrawing from the highest bid account
     if listing_account.seller == ctx.accounts.withdrawer.key()
         && listing_account.highest_bid_pda.unwrap() != ctx.accounts.bid_account_vault.key()
     {
