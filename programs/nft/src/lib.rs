@@ -2,38 +2,27 @@ use anchor_lang::prelude::*;
 
 pub mod processor;
 
-pub mod utils;
-
 pub mod error;
 
 pub mod validate;
 
-use crate::{
-    processor::{
-        english_auction_listing::{
-            bid_english_auction::*,
-            close_english_auction_listing::*,
-            create_english_auction_listing::*,
-            utils::{create_english_auction_bid_pda::*, create_english_auction_listing_pda::*},
-            withdraw_bid_english_auction::*,
-        },
-        fixed_price_listing::{
-            buy_nft_fixed_price_listing::*, close_fixed_price_listing::*,
-            create_fixed_price_listing::*, utils::create_fixed_price_listing_pda::*,
-        },
+use crate::processor::{
+    english_auction_listing::{
+        bid_english_auction::*, close_english_auction_listing::*,
+        create_english_auction_listing::*, utils::create_english_auction_bid_pda::*,
+        withdraw_bid_english_auction::*,
     },
-    utils::create_nft_listing_pda::*,
+    fixed_price_listing::{
+        buy_nft_fixed_price_listing::*, close_fixed_price_listing::*, create_fixed_price_listing::*,
+    },
+    nft::{mint_nft::*, setup_nft_metadata::*},
 };
 
-declare_id!("9otEc69qDRHTpEiS64kqm41tFRAqXSJZt4c8aN3kDEy1");
+declare_id!("BunPDquq7AxQsF3uxfGmNp6HQQ1rvAHw34RUQx5wa4C3");
 
 #[program]
 pub mod listings {
     use super::*;
-
-    pub fn create_nft_listing_pda(ctx: Context<CreateNftListingPda>) -> Result<()> {
-        create_nft_listing_pda_fn(ctx)
-    }
 
     pub fn create_fixed_price_listing(
         ctx: Context<CreateFixedPriceListing>,
@@ -44,22 +33,12 @@ pub mod listings {
         create_fixed_price_listing_fn(ctx, start_date, end_date, price_lamports)
     }
 
-    pub fn create_fixed_price_listing_pda(ctx: Context<CreateFixedPriceListingPda>) -> Result<()> {
-        create_fixed_price_listing_pda_fn(ctx)
-    }
-
     pub fn close_fixed_price_listing(ctx: Context<CloseFixedPriceListing>) -> Result<()> {
         close_fixed_price_listing_fn(ctx)
     }
 
     pub fn buy_nft_fixed_price_listing(ctx: Context<BuyNftFixedPriceListing>) -> Result<()> {
         buy_nft_fixed_price_listing_fn(ctx)
-    }
-
-    pub fn create_english_auction_listing_pda(
-        ctx: Context<CreateEnglishAuctionListingPda>,
-    ) -> Result<()> {
-        create_english_auction_listing_pda_fn(ctx)
     }
 
     pub fn create_english_auction_listing(
@@ -87,5 +66,18 @@ pub mod listings {
 
     pub fn withdraw_bid_english_auction(ctx: Context<WithdrawBidEnglishAuction>) -> Result<()> {
         withdraw_bid_english_auction_fn(ctx)
+    }
+
+    pub fn mint_nft(ctx: Context<MintNft>) -> Result<()> {
+        mint_nft_fn(ctx)
+    }
+
+    pub fn setup_nft_metadata(
+        ctx: Context<SetupNftMetadata>,
+        metadata_title: String,
+        metadata_symbol: String,
+        metadata_uri: String,
+    ) -> Result<()> {
+        setup_nft_metadata_fn(ctx, metadata_title, metadata_symbol, metadata_uri)
     }
 }

@@ -26,11 +26,12 @@ describe("listings", () => {
   const program = anchor.workspace.Listings as Program<Listings>;
 
   it("setup data", async () => {
+    console.log(process.env.ANCHOR_WALLET);
     let payerAccountKey = require(process.env.ANCHOR_WALLET);
     const payerSecretKey = Uint8Array.from(payerAccountKey);
     payer = anchor.web3.Keypair.fromSecretKey(payerSecretKey);
 
-    let accountKey = require("../../keypairs/second.json");
+    let accountKey = require("../../keypairs/first.json");
     const secretKey = Uint8Array.from(accountKey);
     buyer = anchor.web3.Keypair.fromSecretKey(secretKey);
 
@@ -41,7 +42,7 @@ describe("listings", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "HnSYLugfMv9whiaHGabJnRNccYqEDBckGhPYzrNLCxRt",
+      "3VM9UzoE13xQVLLJiinZr3o3rLmocCLgziWMYJ3DBFQX",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(

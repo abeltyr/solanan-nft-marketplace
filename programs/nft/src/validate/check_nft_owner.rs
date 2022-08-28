@@ -1,8 +1,7 @@
 use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
-    error::ErrorCode::MintTokenIssue, utils::create_nft_listing_pda::*,
-    validate::check_token_owner::*,
+    error::ErrorCode::MintTokenIssue, processor::nft::mint_nft::*, validate::check_token_owner::*,
 };
 
 pub fn check_nft_owner<'info>(

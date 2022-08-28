@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{error::ErrorCode::NftListingInvalidData, utils::create_nft_listing_pda::*};
+use crate::{error::ErrorCode::NftListingInvalidData, processor::nft::mint_nft::*};
 
 pub fn check_nft_listing_relation<'info>(
     program_id: &Pubkey,

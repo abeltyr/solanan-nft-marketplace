@@ -5,8 +5,7 @@ use {
 
 use crate::{
     error::ErrorCode,
-    processor::fixed_price_listing::utils::create_fixed_price_listing_pda::*,
-    utils::create_nft_listing_pda::*,
+    processor::{fixed_price_listing::create_fixed_price_listing::*, nft::mint_nft::*},
     validate::{check_active_listing_data::*, check_listing_is_active::*, check_token_owner::*},
 };
 pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> Result<()> {
@@ -42,6 +41,11 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
     // check if the given seller is the same as the one provided in the listing
     if listing_account.seller != ctx.accounts.seller.key() {
         return Err(ErrorCode::SellerInvalidData.into());
+    }
+
+    // check if the given buyer is not the seller
+    if listing_account.seller == ctx.accounts.buyer.key() {
+        return Err(ErrorCode::SellerBuyingIssue.into());
     }
 
     //check seller token match

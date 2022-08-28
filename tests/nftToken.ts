@@ -13,6 +13,8 @@ import {
   getOrCreateAssociatedTokenAccount,
   getAccount,
   mintTo,
+  setAuthority,
+  AuthorityType
 } from "@solana/spl-token";
 import {
   findMasterEditionV2Pda,

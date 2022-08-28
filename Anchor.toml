@@ -1,14 +1,14 @@
 [features]
 seeds = false
 [programs.devnet]
-listings = "9otEc69qDRHTpEiS64kqm41tFRAqXSJZt4c8aN3kDEy1"
+listings = "BunPDquq7AxQsF3uxfGmNp6HQQ1rvAHw34RUQx5wa4C3"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
 cluster = "devnet"
-wallet = "/home/av/.config/solana/id.json"
+wallet = "/home/av/Documents/work/notMi/memusic/memusicNft/tests/keypairs/second.json"
 
 [scripts]
 test-auction-bid = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/bid.ts"
@@ -19,6 +19,7 @@ test-auction-listingPda = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests
 test-auction-nftListing = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/nftListing.ts"
 test-auction-withdraw = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/listing/englishAuction/withdraw.ts"
 
+test-mintNft = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/mintNft.ts"
 test-nftToken = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/nftToken.ts"
 test-nftTransfer = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/nftTransfer.ts"
 

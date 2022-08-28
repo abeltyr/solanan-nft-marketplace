@@ -31,11 +31,11 @@ describe("english auction", () => {
     const payerSecretKey = Uint8Array.from(payerAccountKey);
     payer = anchor.web3.Keypair.fromSecretKey(payerSecretKey);
 
-    let accountKey = require("../../keypairs/second.json");
+    let accountKey = require("../../keypairs/first.json");
     const secretKey = Uint8Array.from(accountKey);
     buyer = anchor.web3.Keypair.fromSecretKey(secretKey);
 
-    let accountKey1 = require("../../keypairs/first.json");
+    let accountKey1 = require("../../keypairs/third.json");
     const secretKey1 = Uint8Array.from(accountKey1);
     buyer1 = anchor.web3.Keypair.fromSecretKey(secretKey1);
 
@@ -46,7 +46,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "HnSYLugfMv9whiaHGabJnRNccYqEDBckGhPYzrNLCxRt",
+      "3VM9UzoE13xQVLLJiinZr3o3rLmocCLgziWMYJ3DBFQX",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -115,12 +115,20 @@ describe("english auction", () => {
 
     bidPda = bidListingPda[0];
 
+    console.log(
+      "bidPda",
+      await program.account.englishAuctionListingBidData.fetch(bidPda),
+    );
     let bidListingPda1 = await anchor.web3.PublicKey.findProgramAddress(
       [listingPda.toBuffer(), buyer1.publicKey.toBuffer()],
       program.programId,
     );
 
     bidPda1 = bidListingPda1[0];
+    console.log(
+      "bidPda1",
+      await program.account.englishAuctionListingBidData.fetch(bidPda1),
+    );
   });
 
   it("check buyer balance", async () => {
@@ -187,6 +195,28 @@ describe("english auction", () => {
           bidAccountVault: bidPda,
         })
         .signers([buyer])
+        .rpc();
+      console.log("Your transaction signature", transaction);
+    } catch (e) {
+      console.log("error", e);
+    }
+  });
+
+  it("highest bidder withdraw ", async () => {
+    try {
+      console.log(
+        "withdraw fund fom bid --------------------------------------------------------------------",
+      );
+
+      let transaction = await program.methods
+        .withdrawBidEnglishAuction()
+        .accounts({
+          listingAccount: listingPda,
+          bidAccount: bidPda1,
+          withdrawer: buyer1.publicKey,
+          bidAccountVault: bidPda1,
+        })
+        .signers([buyer1])
         .rpc();
       console.log("Your transaction signature", transaction);
     } catch (e) {

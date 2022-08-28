@@ -32,11 +32,11 @@ describe("english auction", () => {
     const payerSecretKey = Uint8Array.from(payerAccountKey);
     payer = anchor.web3.Keypair.fromSecretKey(payerSecretKey);
 
-    let accountKey = require("../../keypairs/second.json");
+    let accountKey = require("../../keypairs/first.json");
     const secretKey = Uint8Array.from(accountKey);
     buyer = anchor.web3.Keypair.fromSecretKey(secretKey);
 
-    let accountKey1 = require("../../keypairs/first.json");
+    let accountKey1 = require("../../keypairs/third.json");
     const secretKey1 = Uint8Array.from(accountKey1);
     buyer1 = anchor.web3.Keypair.fromSecretKey(secretKey1);
 
@@ -47,7 +47,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "HnSYLugfMv9whiaHGabJnRNccYqEDBckGhPYzrNLCxRt",
+      "3VM9UzoE13xQVLLJiinZr3o3rLmocCLgziWMYJ3DBFQX",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -362,7 +362,7 @@ describe("english auction", () => {
         "Fail bid with a lower bid than highest --------------------------------------------------------------------",
       );
 
-      const saleAmount = 0.0149 * anchor.web3.LAMPORTS_PER_SOL;
+      const saleAmount = 0.01849 * anchor.web3.LAMPORTS_PER_SOL;
 
       let transaction = await program.methods
         .bidEnglishAuction(new anchor.BN(saleAmount))

@@ -28,7 +28,7 @@ describe("english auction", () => {
     const payerSecretKey = Uint8Array.from(payerAccountKey);
     payer = anchor.web3.Keypair.fromSecretKey(payerSecretKey);
 
-    let accountKey = require("../../keypairs/second.json");
+    let accountKey = require("../../keypairs/first.json");
     const secretKey = Uint8Array.from(accountKey);
     buyer = anchor.web3.Keypair.fromSecretKey(secretKey);
 
@@ -39,7 +39,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "HnSYLugfMv9whiaHGabJnRNccYqEDBckGhPYzrNLCxRt",
+      "3VM9UzoE13xQVLLJiinZr3o3rLmocCLgziWMYJ3DBFQX",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -110,8 +110,14 @@ describe("english auction", () => {
         listingPda,
       );
 
-      let bidderToken = new anchor.web3.PublicKey(nftPda);
+      let bidderToken = ownerTokenAddress;
 
+      let findNftPda = await anchor.web3.PublicKey.findProgramAddress(
+        [mint.toBuffer(), Buffer.from("_authority_")],
+        program.programId,
+      );
+
+      const nftOwnerPda = findNftPda[0];
       if (listingData?.highestBidderToken)
         bidderToken = listingData?.highestBidderToken;
       let transaction = await program.methods
@@ -122,6 +128,7 @@ describe("english auction", () => {
           closer: payer.publicKey,
           sellerToken: ownerTokenAddress,
           bidderToken: bidderToken,
+          nftAuthorityAccount: nftOwnerPda,
         })
         .signers([payer])
         .rpc();
