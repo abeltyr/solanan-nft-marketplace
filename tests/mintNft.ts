@@ -52,29 +52,21 @@ describe("listings", () => {
     mint = anchor.web3.Keypair.generate();
     console.log(`mint: ${mint.publicKey}`);
 
-    let findNftPda = await anchor.web3.PublicKey.findProgramAddress(
+    let findNftOwnerPda = await anchor.web3.PublicKey.findProgramAddress(
       [mint.publicKey.toBuffer(), Buffer.from("_authority_")],
       program.programId,
     );
 
-    nftOwnerPda = findNftPda[0];
-
+    nftOwnerPda = findNftOwnerPda[0];
     console.log(`nftOwnerPda: ${nftOwnerPda.toString()}`);
-    // // create the nft listing
-    // try {
-    //   let transaction = await program.methods
-    //     .createNftAuthorityPda()
-    //     .accounts({
-    //       mint: mint.publicKey,
-    //       owner: payer.publicKey,
-    //       nftAuthorityAccount: nftOwnerPda,
-    //     })
-    //     .signers([payer])
-    //     .rpc();
-    //   console.log("Your transaction signature", transaction);
-    // } catch (e) {
-    //   console.log("Nft Pda Exist", e);
-    // }
+
+    let findNftPda = await anchor.web3.PublicKey.findProgramAddress(
+      [mint.publicKey.toBuffer(), Buffer.from("_nft_listing_data")],
+      program.programId,
+    );
+
+    const nftPda = findNftPda[0];
+    console.log(`nftPda: ${nftPda.toString()}`);
 
     tokenAddress = await anchor.utils.token.associatedAddress({
       mint: mint.publicKey,
@@ -91,6 +83,7 @@ describe("listings", () => {
           tokenAccount: tokenAddress,
           mintAuthority: payer.publicKey,
           nftAuthorityAccount: nftOwnerPda,
+          nftListingAccount: nftPda,
         })
         .signers([mint])
         .rpc();

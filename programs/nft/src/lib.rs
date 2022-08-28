@@ -18,7 +18,7 @@ use crate::processor::{
         buy_nft_fixed_price_listing::*, close_fixed_price_listing::*,
         create_fixed_price_listing::*, utils::create_fixed_price_listing_pda::*,
     },
-    nft_mint::{mint_nft::*, setup_nft_metadata::*, utils::create_nft_listing_pda::*},
+    nft::{mint_nft::*, setup_nft_metadata::*},
 };
 
 declare_id!("WVXjV3GziXiYjAyZJGsUdaW7RLmEeL5h57BzbvJdh2A");
@@ -26,10 +26,6 @@ declare_id!("WVXjV3GziXiYjAyZJGsUdaW7RLmEeL5h57BzbvJdh2A");
 #[program]
 pub mod listings {
     use super::*;
-
-    pub fn create_nft_listing_pda(ctx: Context<CreateNftListingPda>) -> Result<()> {
-        create_nft_listing_pda_fn(ctx)
-    }
 
     pub fn create_fixed_price_listing(
         ctx: Context<CreateFixedPriceListing>,

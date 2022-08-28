@@ -1,8 +1,7 @@
 use {anchor_lang::prelude::*, anchor_spl::token};
 
 use crate::{
-    error::ErrorCode::NftAlreadyListed, processor::nft_mint::utils::create_nft_listing_pda::*,
-    validate::check_nft_owner::*,
+    error::ErrorCode::NftAlreadyListed, processor::nft::mint_nft::*, validate::check_nft_owner::*,
 };
 
 pub fn create_fixed_price_listing_pda_fn(ctx: Context<CreateFixedPriceListingPda>) -> Result<()> {

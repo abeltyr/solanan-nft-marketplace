@@ -6,8 +6,7 @@ use {
 use crate::{
     error::ErrorCode::SellerBidIssue,
     processor::{
-        english_auction_listing::utils::create_english_auction_listing_pda::*,
-        nft_mint::utils::create_nft_listing_pda::*,
+        english_auction_listing::utils::create_english_auction_listing_pda::*, nft::mint_nft::*,
     },
     validate::{
         check_listing_is_active::*, check_nft_owner::*, check_token_owner_and_delegation::*,

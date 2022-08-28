@@ -30,6 +30,11 @@ pub fn mint_nft_fn(ctx: Context<MintNft>) -> Result<()> {
         &ctx.accounts.token_program.key(),
     )?;
 
+    let nft_listing_account = &mut ctx.accounts.nft_listing_account;
+    nft_listing_account.amount = 0;
+    nft_listing_account.active = false;
+    nft_listing_account.mint = ctx.accounts.mint.key().clone();
+
     msg!("Initializing mint account...");
     msg!("Mint: {}", &ctx.accounts.mint.key());
     token::initialize_mint(
@@ -110,4 +115,23 @@ pub struct MintNft<'info> {
     )]
     /// CHECK:
     pub nft_authority_account: UncheckedAccount<'info>,
+    #[account(
+        init,
+        payer = mint_authority,
+        space = 82,
+        seeds = [
+            mint.key().as_ref(),
+            b"_nft_listing_data",
+        ],
+        bump
+    )]
+    pub nft_listing_account: Account<'info, NftListingData>,
+}
+
+#[account]
+pub struct NftListingData {
+    pub amount: u32,
+    pub active: bool,
+    pub listing: Option<String>,
+    pub mint: Pubkey,
 }
