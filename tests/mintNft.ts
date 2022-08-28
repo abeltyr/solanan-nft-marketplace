@@ -27,10 +27,7 @@ describe("listings", () => {
   let mint: anchor.web3.Keypair;
   let connection: anchor.web3.Connection;
   let tokenAddress: anchor.web3.PublicKey;
-  let buyerTokenAddress: anchor.web3.PublicKey;
   let nftOwnerPda;
-  let listingPda;
-  let programAccount: anchor.web3.Keypair;
   const program = anchor.workspace.Listings as Program<Listings>;
 
   const TOKEN_METADATA_PROGRAM_ID = new anchor.web3.PublicKey(

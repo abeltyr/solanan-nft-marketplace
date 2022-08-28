@@ -1,9 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
-import {
-  getOrCreateAssociatedTokenAccount,
-  getAccount,
-} from "@solana/spl-token";
+import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import { clusterApiUrl, Connection } from "@solana/web3.js";
 import { Listings } from "../../../target/types/listings";
 
@@ -38,7 +35,7 @@ describe("listings", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "3VM9UzoE13xQVLLJiinZr3o3rLmocCLgziWMYJ3DBFQX",
+      "DYXESyv4NouW6j8fquDZZeuEW7ooymvQe5uKWMZPiLEm",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(

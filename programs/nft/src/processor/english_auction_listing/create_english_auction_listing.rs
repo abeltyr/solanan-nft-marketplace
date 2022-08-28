@@ -63,7 +63,6 @@ pub fn create_english_auction_listing_fn(
     listing_account.is_active = true;
 
     // update the nft listing data
-
     nft_listing_account.amount = nft_listing_account.amount + 1;
     nft_listing_account.active = true;
     nft_listing_account.listing = Some("English Auction".to_string());

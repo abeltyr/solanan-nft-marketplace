@@ -1,9 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
-import {
-  getOrCreateAssociatedTokenAccount,
-  getAccount,
-} from "@solana/spl-token";
+import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import { clusterApiUrl, Connection } from "@solana/web3.js";
 import { assert } from "chai";
 import { Listings } from "../../../target/types/listings";
@@ -20,7 +17,6 @@ describe("english auction", () => {
   let buyerTokenAddress: anchor.web3.PublicKey;
   let nftPda;
   let listingPda;
-  let bidPda;
   let programAccount: anchor.web3.Keypair;
   const program = anchor.workspace.Listings as Program<Listings>;
 
@@ -40,7 +36,7 @@ describe("english auction", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "3VM9UzoE13xQVLLJiinZr3o3rLmocCLgziWMYJ3DBFQX",
+      "DYXESyv4NouW6j8fquDZZeuEW7ooymvQe5uKWMZPiLEm",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
