@@ -7,7 +7,6 @@ use crate::validate::check_nft_authority_relation::*;
 
 pub fn mint_nft_fn(ctx: Context<MintNft>) -> Result<()> {
     msg!("Creating mint account...");
-    msg!("Mint: {}", &ctx.accounts.mint.key());
 
     let nft_listing_pda = check_nft_authority_relation(
         ctx.program_id,
@@ -36,7 +35,6 @@ pub fn mint_nft_fn(ctx: Context<MintNft>) -> Result<()> {
     nft_listing_account.mint = ctx.accounts.mint.key().clone();
 
     msg!("Initializing mint account...");
-    msg!("Mint: {}", &ctx.accounts.mint.key());
     token::initialize_mint(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
@@ -51,7 +49,6 @@ pub fn mint_nft_fn(ctx: Context<MintNft>) -> Result<()> {
     )?;
 
     msg!("Creating token account...");
-    msg!("Token Address: {}", &ctx.accounts.token_account.key());
     associated_token::create(CpiContext::new(
         ctx.accounts.associated_token_program.to_account_info(),
         associated_token::Create {
@@ -66,8 +63,6 @@ pub fn mint_nft_fn(ctx: Context<MintNft>) -> Result<()> {
     ))?;
 
     msg!("Minting token to token account...");
-    msg!("Mint: {}", &ctx.accounts.mint.to_account_info().key());
-    msg!("Token Address: {}", &ctx.accounts.token_account.key());
     token::mint_to(
         CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),

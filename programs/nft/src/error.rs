@@ -103,4 +103,13 @@ pub enum ErrorCode {
     // 5031
     #[msg("The provided nft authority isn't valid")]
     NftAuthorityInvalidData,
+    // 5032
+    #[msg("The seller can't be buy the nft")]
+    SellerBuyingIssue,
+    // 5033
+    #[msg("Nft not transferred seller can't withdraw ")]
+    SellerWithdrawIssue,
+    // 5034
+    #[msg("Auction didn't have any Bids")]
+    NoBids,
 }

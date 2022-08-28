@@ -8,10 +8,8 @@ pub mod validate;
 
 use crate::processor::{
     english_auction_listing::{
-        bid_english_auction::*,
-        close_english_auction_listing::*,
-        create_english_auction_listing::*,
-        utils::{create_english_auction_bid_pda::*, create_english_auction_listing_pda::*},
+        bid_english_auction::*, close_english_auction_listing::*,
+        create_english_auction_listing::*, utils::create_english_auction_bid_pda::*,
         withdraw_bid_english_auction::*,
     },
     fixed_price_listing::{
@@ -41,12 +39,6 @@ pub mod listings {
 
     pub fn buy_nft_fixed_price_listing(ctx: Context<BuyNftFixedPriceListing>) -> Result<()> {
         buy_nft_fixed_price_listing_fn(ctx)
-    }
-
-    pub fn create_english_auction_listing_pda(
-        ctx: Context<CreateEnglishAuctionListingPda>,
-    ) -> Result<()> {
-        create_english_auction_listing_pda_fn(ctx)
     }
 
     pub fn create_english_auction_listing(

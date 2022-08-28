@@ -43,6 +43,11 @@ pub fn buy_nft_fixed_price_listing_fn(ctx: Context<BuyNftFixedPriceListing>) -> 
         return Err(ErrorCode::SellerInvalidData.into());
     }
 
+    // check if the given buyer is not the seller
+    if listing_account.seller == ctx.accounts.buyer.key() {
+        return Err(ErrorCode::SellerBuyingIssue.into());
+    }
+
     //check seller token match
     check_token_owner(
         &listing_account.seller,

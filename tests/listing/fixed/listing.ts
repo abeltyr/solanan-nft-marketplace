@@ -31,7 +31,7 @@ describe("listings", () => {
     const payerSecretKey = Uint8Array.from(payerAccountKey);
     payer = anchor.web3.Keypair.fromSecretKey(payerSecretKey);
 
-    let accountKey = require("../../keypairs/second.json");
+    let accountKey = require("../../keypairs/first.json");
     const secretKey = Uint8Array.from(accountKey);
     buyer = anchor.web3.Keypair.fromSecretKey(secretKey);
 
@@ -42,7 +42,7 @@ describe("listings", () => {
     connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
     mint = new anchor.web3.PublicKey(
-      "5Az8pQ3WiCDhpDbiK3erZeeswj2cGLvXZpsE4AtpNoy",
+      "3VM9UzoE13xQVLLJiinZr3o3rLmocCLgziWMYJ3DBFQX",
     );
 
     const payerTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -93,234 +93,234 @@ describe("listings", () => {
 
     listingPda = listing[0];
   });
-  // it("Fail Create Listing by providing invalid nftPda", async () => {
-  //   console.log(
-  //     "Fail Create Listing by providing invalid nftPda --------------------------------------------------------------------",
-  //   );
-  //   const startTime: number = new Date().getTime() / 1000 + 3;
-  //   const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
+  it("Fail Create Listing by providing invalid nftPda", async () => {
+    console.log(
+      "Fail Create Listing by providing invalid nftPda --------------------------------------------------------------------",
+    );
+    const startTime: number = new Date().getTime() / 1000 + 3;
+    const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
 
-  //   const mint = new anchor.web3.PublicKey(
-  //     "dEmsanDAqKSC4C9EFGx4JPgGMYk9Bs3f5oZKdTcMAyg",
-  //   );
+    const mint = new anchor.web3.PublicKey(
+      "dEmsanDAqKSC4C9EFGx4JPgGMYk9Bs3f5oZKdTcMAyg",
+    );
 
-  //   const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
-  //   const findNftPda = await anchor.web3.PublicKey.findProgramAddress(
-  //     [mint.toBuffer(), Buffer.from("_nft_listing_data")],
-  //     program.programId,
-  //   );
+    const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
+    const findNftPda = await anchor.web3.PublicKey.findProgramAddress(
+      [mint.toBuffer(), Buffer.from("_nft_listing_data")],
+      program.programId,
+    );
 
-  //   const nftPda = findNftPda[0];
+    const nftPda = findNftPda[0];
 
-  //   console.log(listingPda.toString());
-  //   try {
-  //     let transaction = await program.methods
-  //       .createFixedPriceListing(
-  //         new anchor.BN(startTime),
-  //         new anchor.BN(endTime),
-  //         new anchor.BN(saleAmount),
-  //       )
-  //       .accounts({
-  //         seller: payer.publicKey,
-  //         nftListingAccount: nftPda,
-  //         sellerToken: ownerTokenAddress,
-  //         listingAccount: listingPda,
-  //       })
-  //       .signers([payer])
-  //       .rpc();
+    console.log(listingPda.toString());
+    try {
+      let transaction = await program.methods
+        .createFixedPriceListing(
+          new anchor.BN(startTime),
+          new anchor.BN(endTime),
+          new anchor.BN(saleAmount),
+        )
+        .accounts({
+          seller: payer.publicKey,
+          nftListingAccount: nftPda,
+          sellerToken: ownerTokenAddress,
+          listingAccount: listingPda,
+        })
+        .signers([payer])
+        .rpc();
 
-  //     assert.isNull(transaction);
-  //   } catch (e) {
-  //     console.log(e.error);
-  //     assert.isNotNull(e);
-  //   }
-  // });
-  // it("Fail Create Listing by invalid owner", async () => {
-  //   console.log(
-  //     "Fail Create Listing by invalid owner --------------------------------------------------------------------",
-  //   );
-  //   const startTime: number = new Date().getTime() / 1000 + 3;
-  //   const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+  it("Fail Create Listing by invalid owner", async () => {
+    console.log(
+      "Fail Create Listing by invalid owner --------------------------------------------------------------------",
+    );
+    const startTime: number = new Date().getTime() / 1000 + 3;
+    const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
 
-  //   const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
+    const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
 
-  //   try {
-  //     let transaction = await program.methods
-  //       .createFixedPriceListing(
-  //         new anchor.BN(startTime),
-  //         new anchor.BN(endTime),
-  //         new anchor.BN(saleAmount),
-  //       )
-  //       .accounts({
-  //         seller: buyer.publicKey,
-  //         nftListingAccount: nftPda,
-  //         sellerToken: buyerTokenAddress,
-  //         listingAccount: listingPda,
-  //       })
-  //       .signers([buyer])
-  //       .rpc();
+    try {
+      let transaction = await program.methods
+        .createFixedPriceListing(
+          new anchor.BN(startTime),
+          new anchor.BN(endTime),
+          new anchor.BN(saleAmount),
+        )
+        .accounts({
+          seller: buyer.publicKey,
+          nftListingAccount: nftPda,
+          sellerToken: buyerTokenAddress,
+          listingAccount: listingPda,
+        })
+        .signers([buyer])
+        .rpc();
 
-  //     assert.isNull(transaction);
-  //   } catch (e) {
-  //     console.log(e.error);
-  //     assert.isNotNull(e);
-  //   }
-  // });
-  // it("Fail Create Listing by invalid token Address", async () => {
-  //   console.log(
-  //     "Fail Create Listing by invalid token Address --------------------------------------------------------------------",
-  //   );
-  //   const startTime: number = new Date().getTime() / 1000 + 3;
-  //   const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+  it("Fail Create Listing by invalid token Address", async () => {
+    console.log(
+      "Fail Create Listing by invalid token Address --------------------------------------------------------------------",
+    );
+    const startTime: number = new Date().getTime() / 1000 + 3;
+    const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
 
-  //   const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
+    const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
 
-  //   try {
-  //     let transaction = await program.methods
-  //       .createFixedPriceListing(
-  //         new anchor.BN(startTime),
-  //         new anchor.BN(endTime),
-  //         new anchor.BN(saleAmount),
-  //       )
-  //       .accounts({
-  //         seller: payer.publicKey,
-  //         nftListingAccount: nftPda,
-  //         sellerToken: buyerTokenAddress,
-  //         listingAccount: listingPda,
-  //       })
-  //       .signers([payer])
-  //       .rpc();
+    try {
+      let transaction = await program.methods
+        .createFixedPriceListing(
+          new anchor.BN(startTime),
+          new anchor.BN(endTime),
+          new anchor.BN(saleAmount),
+        )
+        .accounts({
+          seller: payer.publicKey,
+          nftListingAccount: nftPda,
+          sellerToken: buyerTokenAddress,
+          listingAccount: listingPda,
+        })
+        .signers([payer])
+        .rpc();
 
-  //     assert.isNull(transaction);
-  //   } catch (e) {
-  //     console.log(e.error);
-  //     assert.isNotNull(e);
-  //   }
-  // });
-  // it("Fail Create Listing by invalid start Date", async () => {
-  //   console.log(
-  //     "Fail Create Listing by invalid start Date --------------------------------------------------------------------",
-  //   );
-  //   const startTime: number = new Date().getTime() / 1000 - 300;
-  //   const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+  it("Fail Create Listing by invalid start Date", async () => {
+    console.log(
+      "Fail Create Listing by invalid start Date --------------------------------------------------------------------",
+    );
+    const startTime: number = new Date().getTime() / 1000 - 300;
+    const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
 
-  //   const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
+    const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
 
-  //   try {
-  //     let transaction = await program.methods
-  //       .createFixedPriceListing(
-  //         new anchor.BN(startTime),
-  //         new anchor.BN(endTime),
-  //         new anchor.BN(saleAmount),
-  //       )
-  //       .accounts({
-  //         seller: payer.publicKey,
-  //         nftListingAccount: nftPda,
-  //         sellerToken: ownerTokenAddress,
-  //         listingAccount: listingPda,
-  //       })
-  //       .signers([payer])
-  //       .rpc();
+    try {
+      let transaction = await program.methods
+        .createFixedPriceListing(
+          new anchor.BN(startTime),
+          new anchor.BN(endTime),
+          new anchor.BN(saleAmount),
+        )
+        .accounts({
+          seller: payer.publicKey,
+          nftListingAccount: nftPda,
+          sellerToken: ownerTokenAddress,
+          listingAccount: listingPda,
+        })
+        .signers([payer])
+        .rpc();
 
-  //     assert.isNull(transaction);
-  //   } catch (e) {
-  //     console.log(e.error);
-  //     assert.isNotNull(e);
-  //   }
-  // });
-  // it("Fail Create Listing by invalid end Date", async () => {
-  //   console.log(
-  //     "Fail Create Listing by invalid end Date --------------------------------------------------------------------",
-  //   );
-  //   const startTime: number = new Date().getTime() / 1000 + 300;
-  //   const endTime: number = new Date().getTime() / 1000;
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+  it("Fail Create Listing by invalid end Date", async () => {
+    console.log(
+      "Fail Create Listing by invalid end Date --------------------------------------------------------------------",
+    );
+    const startTime: number = new Date().getTime() / 1000 + 300;
+    const endTime: number = new Date().getTime() / 1000;
 
-  //   const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
+    const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
 
-  //   try {
-  //     let transaction = await program.methods
-  //       .createFixedPriceListing(
-  //         new anchor.BN(startTime),
-  //         new anchor.BN(endTime),
-  //         new anchor.BN(saleAmount),
-  //       )
-  //       .accounts({
-  //         seller: payer.publicKey,
-  //         nftListingAccount: nftPda,
-  //         sellerToken: ownerTokenAddress,
-  //         listingAccount: listingPda,
-  //       })
-  //       .signers([payer])
-  //       .rpc();
+    try {
+      let transaction = await program.methods
+        .createFixedPriceListing(
+          new anchor.BN(startTime),
+          new anchor.BN(endTime),
+          new anchor.BN(saleAmount),
+        )
+        .accounts({
+          seller: payer.publicKey,
+          nftListingAccount: nftPda,
+          sellerToken: ownerTokenAddress,
+          listingAccount: listingPda,
+        })
+        .signers([payer])
+        .rpc();
 
-  //     assert.isNull(transaction);
-  //   } catch (e) {
-  //     console.log(e.error);
-  //     assert.isNotNull(e);
-  //   }
-  // });
-  // it("Fail Create Listing by invalid price", async () => {
-  //   console.log(
-  //     "Fail Create Listing by invalid price --------------------------------------------------------------------",
-  //   );
-  //   const startTime: number = new Date().getTime() / 1000 + 300;
-  //   const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+  it("Fail Create Listing by invalid price", async () => {
+    console.log(
+      "Fail Create Listing by invalid price --------------------------------------------------------------------",
+    );
+    const startTime: number = new Date().getTime() / 1000 + 300;
+    const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
 
-  //   const saleAmount = 0 * anchor.web3.LAMPORTS_PER_SOL;
+    const saleAmount = 0 * anchor.web3.LAMPORTS_PER_SOL;
 
-  //   try {
-  //     let transaction = await program.methods
-  //       .createFixedPriceListing(
-  //         new anchor.BN(startTime),
-  //         new anchor.BN(endTime),
-  //         new anchor.BN(saleAmount),
-  //       )
-  //       .accounts({
-  //         seller: payer.publicKey,
-  //         nftListingAccount: nftPda,
-  //         sellerToken: ownerTokenAddress,
-  //         listingAccount: listingPda,
-  //       })
-  //       .signers([payer])
-  //       .rpc();
+    try {
+      let transaction = await program.methods
+        .createFixedPriceListing(
+          new anchor.BN(startTime),
+          new anchor.BN(endTime),
+          new anchor.BN(saleAmount),
+        )
+        .accounts({
+          seller: payer.publicKey,
+          nftListingAccount: nftPda,
+          sellerToken: ownerTokenAddress,
+          listingAccount: listingPda,
+        })
+        .signers([payer])
+        .rpc();
 
-  //     assert.isNull(transaction);
-  //   } catch (e) {
-  //     console.log(e.error);
-  //     assert.isNotNull(e);
-  //   }
-  // });
-  // it("Fail Create Listing by invalid owner and token address", async () => {
-  //   console.log(
-  //     "Fail Create Listing by invalid owner and token address--------------------------------------------------------------------",
-  //   );
-  //   const startTime: number = new Date().getTime() / 1000 + 3;
-  //   const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
+  it("Fail Create Listing by invalid owner and token address", async () => {
+    console.log(
+      "Fail Create Listing by invalid owner and token address--------------------------------------------------------------------",
+    );
+    const startTime: number = new Date().getTime() / 1000 + 3;
+    const endTime: number = new Date().getTime() / 1000 + 60 * 60 * 24;
 
-  //   const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
+    const saleAmount = 0.01 * anchor.web3.LAMPORTS_PER_SOL;
 
-  //   try {
-  //     let transaction = await program.methods
-  //       .createFixedPriceListing(
-  //         new anchor.BN(startTime),
-  //         new anchor.BN(endTime),
-  //         new anchor.BN(saleAmount),
-  //       )
-  //       .accounts({
-  //         seller: buyer.publicKey,
-  //         nftListingAccount: nftPda,
-  //         sellerToken: ownerTokenAddress,
-  //         listingAccount: listingPda,
-  //       })
-  //       .signers([buyer])
-  //       .rpc();
+    try {
+      let transaction = await program.methods
+        .createFixedPriceListing(
+          new anchor.BN(startTime),
+          new anchor.BN(endTime),
+          new anchor.BN(saleAmount),
+        )
+        .accounts({
+          seller: buyer.publicKey,
+          nftListingAccount: nftPda,
+          sellerToken: ownerTokenAddress,
+          listingAccount: listingPda,
+        })
+        .signers([buyer])
+        .rpc();
 
-  //     assert.isNull(transaction);
-  //   } catch (e) {
-  //     console.log(e.error);
-  //     assert.isNotNull(e);
-  //   }
-  // });
+      assert.isNull(transaction);
+    } catch (e) {
+      console.log(e.error);
+      assert.isNotNull(e);
+    }
+  });
   it("Create Listing", async () => {
     console.log(
       "Create Listing --------------------------------------------------------------------",

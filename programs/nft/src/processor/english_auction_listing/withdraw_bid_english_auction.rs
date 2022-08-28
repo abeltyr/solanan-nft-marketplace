@@ -2,8 +2,8 @@ use anchor_lang::prelude::*;
 
 use crate::{
     error::ErrorCode,
-    processor::english_auction_listing::utils::{
-        create_english_auction_bid_pda::*, create_english_auction_listing_pda::*,
+    processor::english_auction_listing::{
+        create_english_auction_listing::*, utils::create_english_auction_bid_pda::*,
     },
 };
 
@@ -25,7 +25,7 @@ pub fn withdraw_bid_english_auction_fn(ctx: Context<WithdrawBidEnglishAuction>) 
 
     let current_time = Clock::get().unwrap().unix_timestamp as u64;
 
-    // check if the auction is closed by check if the closed date has passed
+    // check if the auction is closed
     if listing_account.close_date.is_none()
         || (listing_account.close_date.is_some()
             && (listing_account.close_date.unwrap() == 0
@@ -34,17 +34,16 @@ pub fn withdraw_bid_english_auction_fn(ctx: Context<WithdrawBidEnglishAuction>) 
         return Err(ErrorCode::ListingNotClosed.into());
     }
 
-    // TODO: decide on should all the lamports be extract and close the bid account at the same time
+    // check if the auction has bids
+    if listing_account.highest_bidder.is_none() || listing_account.highest_bid_pda.is_none() {
+        return Err(ErrorCode::NoBids.into());
+    }
 
     // check if the bid has lamports deposited
     if bid_account.bid_price_lamports.is_none()
         || bid_account.bid_price_lamports.is_some() && bid_account.bid_price_lamports.unwrap() == 0
     {
         return Err(ErrorCode::NOLamports.into());
-    }
-
-    if listing_account.highest_bid_pda.is_none() {
-        return Err(ErrorCode::ListingNotClosed.into());
     }
 
     //validate the withdrawer has access
@@ -54,11 +53,16 @@ pub fn withdraw_bid_english_auction_fn(ctx: Context<WithdrawBidEnglishAuction>) 
         return Err(ErrorCode::UnAuthorizedWithdrawal.into());
     }
 
-    //validate the highest bidder  can't withdraw
-    if listing_account.seller != ctx.accounts.withdrawer.key()
-        && listing_account.highest_bid_pda.unwrap() == ctx.accounts.bid_account_vault.key()
+    //validate the highest bidder can withdraw if the nft is not transfer
+    if listing_account.highest_bidder.unwrap() == ctx.accounts.withdrawer.key()
+        && listing_account.nft_transferred
     {
         return Err(ErrorCode::HighestBidderWithDrawIssue.into());
+    }
+
+    // check if the nft is transfer before the seller can withdraw
+    if listing_account.seller == ctx.accounts.withdrawer.key() && !listing_account.nft_transferred {
+        return Err(ErrorCode::SellerWithdrawIssue.into());
     }
 
     if listing_account.seller == ctx.accounts.withdrawer.key()
